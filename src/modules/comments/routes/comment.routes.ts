@@ -4,6 +4,15 @@ import { CommentsController as _CommentsController } from '../controllers/commen
 import { authenticate } from '../../../middleware/auth';
 import { Request, Response, NextFunction } from 'express';
 import { wrapAsync } from '../../../utils/routeHandler';
+import {
+  validateRequestParams,
+  validateRequestQuery,
+} from '../../../middleware/validateRequest';
+import {
+  commentIdParamSchema,
+  postIdParamSchema,
+  routeCommentsQuerySchema,
+} from '../schemas/comments.schemas';
 
 /**
  * Configure comment routes with the controller
@@ -17,6 +26,8 @@ export default function configureCommentRoutes(
   // Public routes
   router.get(
     '/:postId',
+    validateRequestParams(postIdParamSchema),
+    validateRequestQuery(routeCommentsQuerySchema),
     wrapAsync((req: Request, res: Response) =>
       commentsController.getComments(req, res)
     )
@@ -34,6 +45,7 @@ export default function configureCommentRoutes(
   router.delete(
     '/:commentId',
     authenticate(container.authService),
+    validateRequestParams(commentIdParamSchema),
     wrapAsync((req: Request, res: Response) =>
       commentsController.deleteComment(req, res)
     )
