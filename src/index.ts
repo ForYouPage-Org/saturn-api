@@ -209,7 +209,7 @@ function gracefullyShutdown(
         logger.info('MongoDB connection closed successfully');
         process.exit(0);
       })
-      .catch(err => {
+      .catch((err: unknown) => {
         logger.error({ err }, 'Error closing MongoDB connection');
         process.exit(1);
       });
