@@ -1,4 +1,4 @@
-import { Db } from 'mongodb';
+import type { Db } from 'mongodb';
 import { MongoRepository } from '../../shared/repositories/baseRepository';
 
 // Define basic Media metadata type - expand as needed

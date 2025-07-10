@@ -1,12 +1,13 @@
-import express, { Router, NextFunction, Request, Response } from 'express';
-import { AuthController } from '../controllers/authController';
+import type { Router, NextFunction, Request, Response } from 'express';
+import express from 'express';
+import type { AuthController } from '../controllers/authController';
 import { authenticate } from '../../../middleware/auth';
-import { ServiceContainer } from '../../../utils/container';
+import type { ServiceContainer } from '../../../utils/container';
 import { wrapAsync } from '../../../utils/routeHandler';
 import { validateRequestBody } from '../../../middleware/validateRequest';
 import { registerBodySchema, loginBodySchema } from '../schemas/auth.schema';
 import { authRateLimiter } from '../../../middleware/rateLimiter';
-import { AuthService } from '../services/auth.service';
+import type { AuthService } from '../services/auth.service';
 
 /**
  * Configure authentication routes with the controller

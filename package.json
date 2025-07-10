@@ -37,7 +37,15 @@
     "ci:security": "yarn audit --level high || echo 'Security audit completed with warnings'",
     "ci:quality": "yarn type-check && echo 'Quality check passed (lint warnings allowed)'",
     "ci:test": "yarn test:coverage",
-    "ci:build": "yarn build && echo 'Build verification: TypeScript compilation successful'"
+    "ci:build": "yarn build && echo 'Build verification: TypeScript compilation successful'",
+    "deploy": "chmod +x scripts/deploy.sh && ./scripts/deploy.sh",
+    "deploy:pm2": "pm2 start ecosystem.config.js --env production",
+    "deploy:stop": "pm2 stop saturn-api",
+    "deploy:restart": "pm2 restart saturn-api",
+    "deploy:logs": "pm2 logs saturn-api"
+  },
+  "_moduleAliases": {
+    "@": "dist"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -51,6 +59,7 @@
     "http-signature": "^1.4.0",
     "jsonwebtoken": "^9.0.2",
     "luxon": "^3.7.1",
+    "module-alias": "^2.2.3",
     "mongodb": "^6.17.0",
     "mongoose": "^8.16.3",
     "multer": "^2.0.1",

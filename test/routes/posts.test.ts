@@ -158,7 +158,7 @@ describe('Posts Routes', () => {
       expect(responseBody).toHaveProperty('content', 'This is a test post');
 
       // Assuming createPost was mocked properly and a post was "created"
-      testPostId = responseBody._id as string;
+      testPostId = responseBody._id;
     });
 
     it('should return 401 if not authenticated', async () => {

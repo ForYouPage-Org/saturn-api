@@ -1,8 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
-import { ActorService } from '@/modules/actors/services/actorService';
-import { AuthService } from '../services/auth.service';
+import type { Request, Response, NextFunction } from 'express';
+import type { ActorService } from '@/modules/actors/services/actorService';
+import type { AuthService } from '../services/auth.service';
 import { AppError, ErrorType } from '../../../utils/errors';
-import { RegisterRequest, LoginRequest } from '../types/auth';
+import type { RegisterRequest, LoginRequest } from '../types/auth';
 
 /**
  * Controller for handling authentication operations

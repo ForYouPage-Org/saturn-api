@@ -1,7 +1,7 @@
-import { Request, Response } from 'express';
-import { ActorService } from '@/modules/actors/services/actorService';
-import { WebfingerService } from '../services/webfinger.service';
-import { ServiceContainer } from '../../../utils/container';
+import type { Request, Response } from 'express';
+import type { ActorService } from '@/modules/actors/services/actorService';
+import type { WebfingerService } from '../services/webfinger.service';
+import type { ServiceContainer } from '../../../utils/container';
 
 // Extend Request type locally for this controller
 interface RequestWithServices extends Request {
@@ -40,7 +40,7 @@ export class WebFingerController {
       }
 
       // Parse the resource URI (acct:username@domain)
-      const match = resource.match(/^acct:([^@]+)@(.+)$/);
+      const match = /^acct:([^@]+)@(.+)$/.exec(resource);
 
       if (!match) {
         return res.status(400).json({ error: 'Invalid resource format' });

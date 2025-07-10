@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import { NotificationService } from '../services/notification.service';
+import type { Request, Response, NextFunction } from 'express';
+import type { NotificationService } from '../services/notification.service';
 import { AppError, ErrorType } from '../../../utils/errors';
 
 export class NotificationsController {

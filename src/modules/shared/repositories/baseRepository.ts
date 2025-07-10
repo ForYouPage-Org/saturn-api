@@ -1,18 +1,19 @@
-import {
+import type {
   Collection,
   Db,
   Filter,
   FindOptions,
-  ModifyResult as _ModifyResult,
-  OptionalId as _OptionalId,
   Document,
-  ObjectId,
   OptionalUnlessRequiredId,
   UpdateFilter,
   WithId,
   CountDocumentsOptions,
   DeleteOptions,
-  FindOneAndUpdateOptions,
+  FindOneAndUpdateOptions} from 'mongodb';
+import {
+  ModifyResult as _ModifyResult,
+  OptionalId as _OptionalId,
+  ObjectId
 } from 'mongodb';
 import logger from '../../../utils/logger';
 
@@ -233,7 +234,7 @@ export abstract class MongoRepository<T extends Document>
       console.log(
         `[BaseRepository] Successfully updated document with ID: ${result._id}`
       );
-      return result as WithId<T>;
+      return result;
     } catch (error) {
       console.error(`[BaseRepository] Error in findOneAndUpdate:`, error);
       logger.error(

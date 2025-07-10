@@ -1,6 +1,6 @@
-import { Actor } from '../models/actor';
-import { ActorRepository } from '../repositories/actorRepository';
-import { NotificationService } from '@/modules/notifications/services/notification.service';
+import type { Actor } from '../models/actor';
+import type { ActorRepository } from '../repositories/actorRepository';
+import type { NotificationService } from '@/modules/notifications/services/notification.service';
 import { AppError, ErrorType } from '@/utils/errors';
 import { ObjectId } from 'mongodb';
 

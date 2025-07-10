@@ -1,5 +1,6 @@
-import { Collection as _Collection, Db, ObjectId } from 'mongodb';
-import { Actor } from '@/modules/actors/models/actor';
+import type { Db} from 'mongodb';
+import { Collection as _Collection, ObjectId } from 'mongodb';
+import type { Actor } from '@/modules/actors/models/actor';
 import { MongoRepository } from './baseRepository';
 import { BaseRepository as _BaseRepository } from '@/repositories/baseRepository'; // Assuming base class
 
@@ -76,7 +77,7 @@ export class ActorRepository extends MongoRepository<Actor> {
 
   async findFollowing(actorId: string, page = 1, limit = 20): Promise<Actor[]> {
     const actor = await this.findById(actorId);
-    if (!actor || !actor.following) {
+    if (!actor?.following) {
       return [];
     }
     // Map string IDs to ObjectIds for the $in query

@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import { ServiceContainer } from '../utils/container';
+import type { Request, Response, NextFunction } from 'express';
+import type { ServiceContainer } from '../utils/container';
 
 /**
  * Middleware factory to inject the service container onto the request object.

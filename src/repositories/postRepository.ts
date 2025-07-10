@@ -1,5 +1,6 @@
-import { Filter as _Filter, Db, ObjectId } from 'mongodb';
-import { Post } from '@/modules/posts/models/post';
+import type { Db} from 'mongodb';
+import { Filter as _Filter, ObjectId } from 'mongodb';
+import type { Post } from '@/modules/posts/models/post';
 import { MongoRepository } from './baseRepository';
 
 export class PostRepository extends MongoRepository<Post> {

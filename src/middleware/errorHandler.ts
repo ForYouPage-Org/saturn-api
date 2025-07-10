@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { AppError, ErrorType } from '../utils/errors';
 import { ZodError } from 'zod';
 import logger from '../utils/logger';

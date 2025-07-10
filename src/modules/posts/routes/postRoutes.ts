@@ -8,7 +8,7 @@ import { PostsController as _PostsController } from '../controllers/postsControl
 import { CommentsController as _CommentsController } from '../../comments/controllers/comments.controller';
 import { authenticate } from '../../../middleware/auth';
 import { AuthService as _AuthService } from '../../auth/services/auth.service';
-import { ServiceContainer } from '../../../utils/container';
+import type { ServiceContainer } from '../../../utils/container';
 import { wrapAsync } from '../../../utils/routeHandler';
 import {
   validateRequestBody,

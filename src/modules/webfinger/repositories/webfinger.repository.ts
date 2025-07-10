@@ -1,4 +1,4 @@
-import { Db } from 'mongodb';
+import type { Db } from 'mongodb';
 import { MongoRepository } from '../../shared/repositories/baseRepository';
 
 // Define property value types for Webfinger
@@ -19,13 +19,13 @@ interface WebfingerResource {
   subject: string;
   aliases?: string[];
   properties?: Record<string, WebfingerPropertyValue>;
-  links?: Array<{
+  links?: {
     rel: string;
     type?: string;
     href?: string;
     titles?: Record<string, string>;
     properties?: Record<string, WebfingerPropertyValue>;
-  }>;
+  }[];
 }
 
 export class WebfingerRepository extends MongoRepository<WebfingerResource> {

@@ -1,10 +1,11 @@
-import express, { Router } from 'express';
+import type { Router } from 'express';
+import express from 'express';
 import configureAuthRoutes from '../modules/auth/routes/authRoutes';
 import configurePostRoutes from '../modules/posts/routes/postRoutes';
 import configureActorRoutes from '../modules/actors/routes/actorRoutes';
 import configureCommentRoutes from '../modules/comments/routes/comment.routes';
 import { configureNotificationRoutes } from '../modules/notifications/routes/notification.routes';
-import { ServiceContainer } from '../utils/container';
+import type { ServiceContainer } from '../utils/container';
 
 /**
  * Configure and mount all application routes

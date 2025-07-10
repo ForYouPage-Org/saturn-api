@@ -1,8 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { DbUser } from '../modules/auth/models/user';
-import { AuthService } from '../modules/auth/services/auth.service';
-import { Db } from 'mongodb';
+import type { DbUser } from '../modules/auth/models/user';
+import type { AuthService } from '../modules/auth/services/auth.service';
+import type { Db } from 'mongodb';
 import { ObjectId as _ObjectId } from 'mongodb';
 import { AppError, ErrorType } from '../utils/errors';
 import logger from '../utils/logger';
@@ -52,7 +52,7 @@ export const auth = async (
     // Get token from Authorization header
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader?.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'Authorization header required' });
     }
 
@@ -144,8 +144,8 @@ export const authenticateToken = (
     'WARNING: Using deprecated authenticateToken() middleware. Please migrate to authenticate().'
   );
 
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(' ')[1];
 
   if (!token) {
     return res.status(401).json({ message: 'No token provided' });
@@ -194,7 +194,7 @@ export const authenticate = (
     try {
       const authHeader = req.headers.authorization;
 
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      if (!authHeader?.startsWith('Bearer ')) {
         return res.status(401).json({ error: 'Authorization header required' });
       }
 

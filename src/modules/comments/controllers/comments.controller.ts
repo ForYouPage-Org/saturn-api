@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
-import { CommentService } from '../services/comment.service';
-import { CreateCommentDto as CommentModelDto } from '../models/comment';
+import type { Request, Response, NextFunction } from 'express';
+import type { CommentService } from '../services/comment.service';
+import type { CreateCommentDto as CommentModelDto } from '../models/comment';
 import { AppError, ErrorType } from '@/utils/errors';
 
 // Define DTO locally if needed for input shape, but use Model DTO for service call

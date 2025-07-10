@@ -1,4 +1,4 @@
-import { ObjectId } from 'mongodb';
+import type { ObjectId } from 'mongodb';
 import { Actor as _Actor } from '../../../modules/actors/models/actor';
 import { Post as _Post } from '../../../modules/posts/models/post';
 import { Comment as _Comment } from '../../../modules/comments/models/comment';

@@ -1,28 +1,30 @@
-import {
+import type {
   Notification,
   CreateNotificationDto,
-  FormattedNotification,
+  FormattedNotification} from '../models/notification';
+import {
   NotificationType as _NotificationType,
 } from '../models/notification';
 import { NotificationRepository } from '../../../modules/notifications/repositories/notification.repository';
-import { ActorService } from '../../../modules/actors/services/actorService';
+import type { ActorService } from '../../../modules/actors/services/actorService';
 import {
   AppError as _AppError,
   ErrorType as _ErrorType,
 } from '../../../utils/errors';
-import {
+import type {
   Db,
-  ObjectId,
   Filter,
-  UpdateFilter as _UpdateFilter,
   UpdateResult,
-  DeleteResult as _DeleteResult,
   Collection,
-  OptionalUnlessRequiredId,
+  OptionalUnlessRequiredId} from 'mongodb';
+import {
+  ObjectId,
+  UpdateFilter as _UpdateFilter,
+  DeleteResult as _DeleteResult
 } from 'mongodb';
-import { PostService } from '../../../modules/posts/services/postService';
-import { CommentService } from '../../../modules/comments/services/comment.service';
-import { Actor } from '../../../modules/actors/models/actor';
+import type { PostService } from '../../../modules/posts/services/postService';
+import type { CommentService } from '../../../modules/comments/services/comment.service';
+import type { Actor } from '../../../modules/actors/models/actor';
 import logger from '../../../utils/logger';
 
 // Define a simple logger interface or import a proper logger

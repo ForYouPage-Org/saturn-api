@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { ServiceContainer as _ServiceContainer } from '../utils/container';
 import { ActorService as _ActorService } from '@/modules/actors/services/actorService';
 

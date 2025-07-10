@@ -16,13 +16,13 @@ declare module 'jsonwebtoken' {
   export function sign(
     payload: string | object | Buffer,
     secretOrPrivateKey: jwt.Secret,
-    options?: jwt.SignOptions | undefined
+    options?: jwt.SignOptions  
   ): string;
 
   export function verify(
     token: string,
     secretOrPublicKey: jwt.Secret,
-    options?: jwt.VerifyOptions | undefined
+    options?: jwt.VerifyOptions  
   ): { id: string; username: string };
 }
 

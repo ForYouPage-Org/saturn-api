@@ -1,16 +1,18 @@
-import {
+import type {
   Db,
+  Filter,
+  FindOptions} from 'mongodb';
+import {
   Collection as _Collection,
   ObjectId,
-  Filter,
   UpdateFilter as _UpdateFilter,
   FindOneAndUpdateOptions as _FindOneAndUpdateOptions,
   ModifyResult as _ModifyResult,
-  WithId as _WithId,
-  FindOptions,
+  WithId as _WithId
 } from 'mongodb';
 import { MongoRepository } from '../../shared/repositories/baseRepository';
-import { Post, Attachment as _Attachment } from '../models/post';
+import type { Post} from '../models/post';
+import { Attachment as _Attachment } from '../models/post';
 import { Actor as _Actor } from '../../../modules/actors/models/actor';
 
 export class PostRepository extends MongoRepository<Post> {

@@ -54,7 +54,7 @@ jest.mock('@/middleware/auth', () => {
     const authHeader = req.headers.authorization;
     let user: Actor | undefined = undefined;
 
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    if (authHeader?.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
       try {
         // Use simple object type and handle in a type-safe way

@@ -1,12 +1,12 @@
-import { Request, Response, NextFunction } from 'express';
-import { PostService } from '@/modules/posts/services/postService';
-import { ActorService } from '@/modules/actors/services/actorService';
-import { UploadService } from '@/modules/media/services/upload.service';
+import type { Request, Response, NextFunction } from 'express';
+import type { PostService } from '@/modules/posts/services/postService';
+import type { ActorService } from '@/modules/actors/services/actorService';
+import type { UploadService } from '@/modules/media/services/upload.service';
 import { AppError, ErrorType } from '@/utils/errors';
-import { Post, Attachment } from '@/modules/posts/models/post';
-import { Actor } from '@/modules/actors/models/actor';
+import type { Post, Attachment } from '@/modules/posts/models/post';
+import type { Actor } from '@/modules/actors/models/actor';
 import { ObjectId } from 'mongodb';
-import {
+import type {
   CreatePostData,
   UpdatePostData,
 } from '@/modules/posts/services/postService';
@@ -85,7 +85,7 @@ export class PostsController {
       Actor,
       'id' | 'username' | 'preferredUsername' | 'displayName' | 'icon' | 'name'
     > | null;
-    if (post.actor && post.actor.id) {
+    if (post.actor?.id) {
       // Use pre-populated actor summary if available
       author = post.actor;
     } else {

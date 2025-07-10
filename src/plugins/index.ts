@@ -1,24 +1,18 @@
-import { Application } from 'express';
-import { Post } from '../modules/posts/models/post';
+import type { Application } from 'express';
+import type { Post } from '../modules/posts/models/post';
 
-export interface HookData {
-  [key: string]: unknown;
-}
+export type HookData = Record<string, unknown>;
 
 export interface ServerPlugin {
   name: string;
   version: string;
   init?: (app: Application) => void;
-  hooks?: {
-    [hookName: string]: (data: HookData) => void | Promise<void>;
-  };
+  hooks?: Record<string, (data: HookData) => void | Promise<void>>;
   onNewPost?(postData: Post): void;
 }
 
 const plugins: ServerPlugin[] = [];
-const hooks: {
-  [hookName: string]: Array<(data: HookData) => void | Promise<void>>;
-} = {};
+const hooks: Record<string, ((data: HookData) => void | Promise<void>)[]> = {};
 
 export function registerPlugin(plugin: ServerPlugin): void {
   console.log(`Registering plugin: ${plugin.name} v${plugin.version}`);

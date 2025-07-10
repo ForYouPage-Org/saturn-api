@@ -1,8 +1,8 @@
 import fetch from 'node-fetch';
 import crypto from 'crypto';
 import { DateTime } from 'luxon';
-import { Actor } from '@/modules/actors/models/actor';
-import { ActivityPubActivity } from '../modules/activitypub/models/activitypub';
+import type { Actor } from '@/modules/actors/models/actor';
+import type { ActivityPubActivity } from '../modules/activitypub/models/activitypub';
 
 // Helper for making signed HTTP requests to other ActivityPub servers
 export async function sendSignedRequest(
@@ -73,7 +73,7 @@ export async function fetchRemoteActor(actorUrl: string): Promise<unknown> {
     }
 
     const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/activity+json')) {
+    if (!contentType?.includes('application/activity+json')) {
       throw new Error('Invalid content type received');
     }
 

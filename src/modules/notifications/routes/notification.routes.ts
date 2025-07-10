@@ -1,13 +1,14 @@
-import express, {
+import type {
   Router,
+  Request as ExpressRequest} from 'express';
+import express, {
   RequestHandler as _RequestHandler,
-  Request as ExpressRequest,
   Response as _Response,
   NextFunction as _NextFunction,
 } from 'express';
 import { NotificationsController } from '../controllers/notifications.controller';
 import { authenticate } from '../../../middleware/auth';
-import { ServiceContainer } from '../../../utils/container';
+import type { ServiceContainer } from '../../../utils/container';
 import { wrapAsync } from '../../../utils/routeHandler';
 import {
   validateRequestQuery,
@@ -63,7 +64,7 @@ export function configureNotificationRoutes(
   ): express.Response | void => {
     // Check for authorization header first
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader?.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'Authorization header required' });
     }
 

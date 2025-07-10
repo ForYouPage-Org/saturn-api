@@ -1,6 +1,7 @@
-import { Db, ObjectId } from 'mongodb';
+import type { Db} from 'mongodb';
+import { ObjectId } from 'mongodb';
 import crypto from 'crypto';
-import { Actor } from '@/modules/actors/models/actor';
+import type { Actor } from '@/modules/actors/models/actor';
 import { ActorRepository } from '@/modules/actors/repositories/actorRepository';
 import bcryptjs from 'bcryptjs'; // Replace bcrypt with bcryptjs
 

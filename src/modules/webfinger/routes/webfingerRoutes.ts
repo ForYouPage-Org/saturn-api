@@ -1,6 +1,7 @@
-import express, { Request, Response, Router, NextFunction } from 'express';
+import type { Request, Response, Router, NextFunction } from 'express';
+import express from 'express';
 import { WebFingerController } from '../controllers/webfingerController';
-import { ServiceContainer } from '../../../utils/container';
+import type { ServiceContainer } from '../../../utils/container';
 
 /**
  * Configure WebFinger routes with the controller

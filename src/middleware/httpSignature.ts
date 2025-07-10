@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
 import { fetchRemoteActor } from '../utils/federation';
 
@@ -109,7 +109,7 @@ export async function verifyHttpSignature(
 
     // Extract public key
     let publicKeyPem: string;
-    if (remoteActor.publicKey && remoteActor.publicKey.publicKeyPem) {
+    if (remoteActor.publicKey?.publicKeyPem) {
       publicKeyPem = remoteActor.publicKey.publicKeyPem;
     } else {
       res.status(401).json({ error: 'No public key found for actor' });

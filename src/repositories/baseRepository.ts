@@ -1,11 +1,12 @@
-import {
+import type {
   Collection,
   Db,
   Filter,
   OptionalId,
   Document,
+  OptionalUnlessRequiredId} from 'mongodb';
+import {
   ObjectId,
-  OptionalUnlessRequiredId,
   WithId as _WithId,
 } from 'mongodb';
 

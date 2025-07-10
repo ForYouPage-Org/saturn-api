@@ -1,4 +1,4 @@
-import { Db } from 'mongodb';
+import type { Db } from 'mongodb';
 import { ActorRepository } from '@/modules/actors/repositories/actorRepository';
 
 export interface WebFingerResource {
@@ -28,7 +28,7 @@ export class WebFingerService {
    */
   async resolveResource(resource: string): Promise<WebFingerResource> {
     // Parse the resource URI (acct:username@domain)
-    const match = resource.match(/^acct:([^@]+)@(.+)$/);
+    const match = /^acct:([^@]+)@(.+)$/.exec(resource);
 
     if (!match) {
       throw new Error('Invalid resource format');

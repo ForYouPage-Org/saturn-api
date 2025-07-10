@@ -1,7 +1,8 @@
-import express, { Request, Response, Router, NextFunction } from 'express';
+import type { Request, Response, Router, NextFunction } from 'express';
+import express from 'express';
 import { ActorsController } from '../controllers/actorsController';
 import { authenticate } from '../../../middleware/auth';
-import { ServiceContainer } from '../../../utils/container';
+import type { ServiceContainer } from '../../../utils/container';
 import { wrapAsync } from '../../../utils/routeHandler';
 
 /**

@@ -1,8 +1,9 @@
-import { Request, Response, NextFunction, RequestHandler } from 'express';
+import type { Request, Response, NextFunction, RequestHandler } from 'express';
+import type {
+  ZodType,
+  ZodTypeDef} from 'zod';
 import {
   AnyZodObject as _AnyZodObject,
-  ZodType,
-  ZodTypeDef,
   ZodFormattedError as _ZodFormattedError,
   ZodError as _ZodError,
 } from 'zod';
@@ -30,8 +31,7 @@ export function validateRequestBody<T>(schema: ZodType<T>): RequestHandler {
 
     // Skip validation for multipart/form-data requests (used for file uploads)
     const isMultipart =
-      req.headers &&
-      req.headers['content-type'] &&
+      req.headers?.['content-type'] &&
       typeof req.headers['content-type'] === 'string' &&
       req.headers['content-type'].includes('multipart/form-data');
 
@@ -104,7 +104,7 @@ export function validateRequestQuery(
 
       // If validation succeeds, update req.query with the parsed data
       // Use type assertion to ensure TypeScript accepts the assigned value
-      req.query = parseResult.data as any;
+      req.query = parseResult.data;
       log(
         `[Validator] Query validation SUCCESS for ${req.path}. Calling next().`
       );

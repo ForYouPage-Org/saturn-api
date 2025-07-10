@@ -1,7 +1,7 @@
 // Auth service implementation
 import bcryptjs from 'bcryptjs';
-import { AuthRepository } from '../repositories/auth.repository';
-import { DbUser } from '../models/user';
+import type { AuthRepository } from '../repositories/auth.repository';
+import type { DbUser } from '../models/user';
 import { ObjectId } from 'mongodb';
 import jwt from 'jsonwebtoken';
 import logger from '../../../utils/logger';

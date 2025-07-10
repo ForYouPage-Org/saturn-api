@@ -1,6 +1,7 @@
-import { Db, MongoServerError } from 'mongodb';
+import type { Db} from 'mongodb';
+import { MongoServerError } from 'mongodb';
 import { MongoRepository } from '../../shared/repositories/baseRepository';
-import { DbUser } from '../models/user';
+import type { DbUser } from '../models/user';
 import logger from '../../../utils/logger'; // Assuming logger setup
 
 export class AuthRepository extends MongoRepository<DbUser> {
@@ -27,7 +28,7 @@ export class AuthRepository extends MongoRepository<DbUser> {
           error.message.includes('already exists'))
       ) {
         logger.warn(
-          { indexName: error.message.match(/index: (\S+)/)?.[1] },
+          { indexName: (/index: (\S+)/.exec(error.message))?.[1] },
           `Index creation conflict/exists in AuthRepository, likely harmless: ${error.message}`
         );
       } else {

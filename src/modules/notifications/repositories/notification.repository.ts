@@ -1,6 +1,7 @@
-import { Db, ObjectId, Filter } from 'mongodb';
+import type { Db, Filter } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import { MongoRepository } from '../../shared/repositories/baseRepository';
-import { Notification } from '../models/notification';
+import type { Notification } from '../models/notification';
 
 export class NotificationRepository extends MongoRepository<Notification> {
   constructor(db: Db) {

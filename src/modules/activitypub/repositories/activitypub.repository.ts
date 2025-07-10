@@ -1,4 +1,4 @@
-import { Db } from 'mongodb';
+import type { Db } from 'mongodb';
 import { MongoRepository } from '../../shared/repositories/baseRepository';
 
 // Define a basic ActivityPub object type - expand this as needed

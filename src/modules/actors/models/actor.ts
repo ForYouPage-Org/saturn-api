@@ -1,4 +1,4 @@
-import { ObjectId } from 'mongodb';
+import type { ObjectId } from 'mongodb';
 
 export interface ActorPublicKey {
   id: string; // URL for the key itself

@@ -1,6 +1,7 @@
-import { Db, ObjectId, Filter, UpdateFilter } from 'mongodb';
+import type { Db, Filter, UpdateFilter } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import { MongoRepository } from '../../shared/repositories/baseRepository';
-import { Actor } from '../models/actor';
+import type { Actor } from '../models/actor';
 
 export class ActorRepository extends MongoRepository<Actor> {
   constructor(db: Db) {
@@ -196,7 +197,7 @@ export class ActorRepository extends MongoRepository<Actor> {
     limit = 20
   ): Promise<Actor[]> {
     const actor = await this.findById(actorId);
-    if (!actor || !actor.following || actor.following.length === 0) return [];
+    if (!actor?.following || actor.following.length === 0) return [];
 
     const skip = (page - 1) * limit;
     // Find actors whose AP IDs are in the actor's following list

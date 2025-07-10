@@ -1,5 +1,5 @@
 // Media service implementation
-import { MediaRepository } from '../repositories/media.repository';
+import type { MediaRepository } from '../repositories/media.repository';
 import fs from 'fs/promises';
 import { WithId } from 'mongodb';
 

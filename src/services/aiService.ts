@@ -1,4 +1,4 @@
-import { Collection, Db } from 'mongodb';
+import type { Collection, Db } from 'mongodb';
 
 export interface AIAnalysisResult {
   sentiment: string;

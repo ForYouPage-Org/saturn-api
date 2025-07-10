@@ -41,9 +41,7 @@ describe('Actor Routes', () => {
     it('should return actors via search endpoint (empty query)', async () => {
       // Assuming searchActors returns Actor[]
       (
-        mockActorService.searchActors as jest.MockedFunction<
-          typeof mockActorService.searchActors
-        >
+        mockActorService.searchActors
       ).mockResolvedValue([fullMockActor]); // Resolve with Actor[]
 
       const response = await request(global.testApp)
@@ -80,9 +78,7 @@ describe('Actor Routes', () => {
       };
       // Correct mock signature for searchActors
       (
-        mockActorService.searchActors as jest.MockedFunction<
-          typeof mockActorService.searchActors
-        >
+        mockActorService.searchActors
       ).mockResolvedValue(mockSearchResult.actors); // Assuming signature is (query: string, limit?: number)
 
       const response = await request(global.testApp)

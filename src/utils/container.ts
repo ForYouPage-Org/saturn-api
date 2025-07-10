@@ -1,4 +1,4 @@
-import { Db } from 'mongodb';
+import type { Db } from 'mongodb';
 import { ActorService } from '@/modules/actors/services/actorService';
 import { ActorRepository } from '../modules/actors/repositories/actorRepository';
 import { PostService } from '@/modules/posts/services/postService';

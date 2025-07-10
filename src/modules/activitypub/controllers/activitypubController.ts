@@ -1,10 +1,10 @@
-import { Request, Response } from 'express';
-import { ActorService } from '../../actors/services/actorService';
-import { ActivityPubService } from '../services/activitypub.service';
+import type { Request, Response } from 'express';
+import type { ActorService } from '../../actors/services/actorService';
+import type { ActivityPubService } from '../services/activitypub.service';
 import { PostService as _PostService } from '@/modules/posts/services/postService';
 import { AppError as _AppError, ErrorType as _ErrorType } from '@/utils/errors';
 import { Actor as _Actor } from '@/modules/actors/models/actor';
-import { ActivityPubActivity } from '../models/activitypub';
+import type { ActivityPubActivity } from '../models/activitypub';
 
 export class ActivityPubController {
   private actorService: ActorService;

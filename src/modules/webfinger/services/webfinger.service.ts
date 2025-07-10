@@ -1,6 +1,6 @@
 // Webfinger service implementation
 import { Db as _Db } from 'mongodb';
-import { WebfingerRepository } from '../repositories/webfinger.repository';
+import type { WebfingerRepository } from '../repositories/webfinger.repository';
 import { Actor as _Actor } from '@/modules/actors/models/actor';
 
 export class WebfingerService {

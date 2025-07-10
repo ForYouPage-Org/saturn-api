@@ -1,4 +1,8 @@
-import express, { RequestHandler, ErrorRequestHandler } from 'express';
+// Configure module aliases for production builds
+import 'module-alias/register';
+
+import type { RequestHandler, ErrorRequestHandler } from 'express';
+import express from 'express';
 import cors from 'cors';
 import { MongoClient } from 'mongodb';
 import { errorHandler } from './middleware/errorHandler';

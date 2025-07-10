@@ -1,6 +1,7 @@
-import { Db, ObjectId } from 'mongodb';
+import type { Db} from 'mongodb';
+import { ObjectId } from 'mongodb';
 import { MongoRepository } from '../../shared/repositories/baseRepository';
-import { Comment } from '../models/comment';
+import type { Comment } from '../models/comment';
 
 export class CommentRepository extends MongoRepository<Comment> {
   constructor(db: Db) {

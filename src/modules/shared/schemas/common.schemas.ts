@@ -44,10 +44,10 @@ export const paginationQuerySchema = z.object({
 });
 
 // Explicitly define the return type after transformation
-export type PaginationQueryType = {
+export interface PaginationQueryType {
   page: number;
   limit: number;
-};
+}
 
 /**
  * Schema for offset-based pagination query parameters
@@ -74,7 +74,7 @@ export const offsetPaginationQuerySchema = z.object({
 });
 
 // Explicitly define the return type after transformation
-export type OffsetPaginationQueryType = {
+export interface OffsetPaginationQueryType {
   offset: number;
   limit: number;
-};
+}

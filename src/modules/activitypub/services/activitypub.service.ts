@@ -1,7 +1,7 @@
 // ActivityPub service implementation
 import { Db as _Db } from 'mongodb';
-import { ActivityPubRepository } from '../repositories/activitypub.repository';
-import { ActivityPubActivity } from '../models/activitypub';
+import type { ActivityPubRepository } from '../repositories/activitypub.repository';
+import type { ActivityPubActivity } from '../models/activitypub';
 
 export class ActivityPubService {
   private repository: ActivityPubRepository;

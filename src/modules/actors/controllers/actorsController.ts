@@ -1,10 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
-import { ActorService } from '../services/actorService';
-import { UploadService } from '@/modules/media/services/upload.service';
-import { PostService } from '@/modules/posts/services/postService';
+import type { Request, Response, NextFunction } from 'express';
+import type { ActorService } from '../services/actorService';
+import type { UploadService } from '@/modules/media/services/upload.service';
+import type { PostService } from '@/modules/posts/services/postService';
 import { AppError, ErrorType } from '@/utils/errors';
 import { ObjectId } from 'mongodb';
-import { Actor } from '../models/actor';
+import type { Actor } from '../models/actor';
 
 // Define DTO for controller input
 interface CreateActorControllerDTO {
@@ -169,7 +169,7 @@ export class ActorsController {
       } catch {
         // If service method fails, try repository access as fallback
         const objectId = new ObjectId(actorId);
-        const actorRepository = this.actorService['actorRepository'];
+        const actorRepository = this.actorService.actorRepository;
         const success = await actorRepository.deleteById(objectId);
 
         if (!success) {

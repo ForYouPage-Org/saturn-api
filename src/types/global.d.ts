@@ -1,7 +1,7 @@
 // Global type declarations that don't relate to Express
 // Any Express type extensions should go in express.d.ts
 import '@types/jest';
-import { MongoClient } from 'mongodb';
+import type { MongoClient } from 'mongodb';
 
 declare global {
   namespace NodeJS {

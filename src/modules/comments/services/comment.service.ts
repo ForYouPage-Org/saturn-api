@@ -1,15 +1,15 @@
-import { Comment, CreateCommentDto, FormattedComment } from '../models/comment';
-import { CommentRepository } from '../repositories/comment.repository';
-import { PostService } from '../../posts/services/postService';
-import { ActorService } from '../../actors/services/actorService';
-import { NotificationService } from '../../notifications/services/notification.service';
+import type { Comment, CreateCommentDto, FormattedComment } from '../models/comment';
+import type { CommentRepository } from '../repositories/comment.repository';
+import type { PostService } from '../../posts/services/postService';
+import type { ActorService } from '../../actors/services/actorService';
+import type { NotificationService } from '../../notifications/services/notification.service';
 import { NotificationType } from '../../notifications/models/notification';
 import { AppError, ErrorType } from '../../../utils/errors';
-import { Actor } from '../../../modules/actors/models/actor';
+import type { Actor } from '../../../modules/actors/models/actor';
 import { Post as _Post } from '../../../modules/posts/models/post';
 import { ObjectId } from 'mongodb';
-import { OptionalId } from 'mongodb';
-import { CreateNotificationDto } from '../../notifications/models/notification';
+import type { OptionalId } from 'mongodb';
+import type { CreateNotificationDto } from '../../notifications/models/notification';
 
 export class CommentService {
   private repository: CommentRepository;

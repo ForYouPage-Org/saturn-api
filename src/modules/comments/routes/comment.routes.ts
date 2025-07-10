@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { ServiceContainer } from '../../../utils/container';
+import type { ServiceContainer } from '../../../utils/container';
 import { CommentsController as _CommentsController } from '../controllers/comments.controller';
 import { authenticate } from '../../../middleware/auth';
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { wrapAsync } from '../../../utils/routeHandler';
 import {
   validateRequestParams,

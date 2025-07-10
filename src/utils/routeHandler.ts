@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction, RequestHandler } from 'express';
+import type { Request, Response, NextFunction, RequestHandler } from 'express';
 
 /**
  * Safely wraps an async controller method for use in Express route handlers

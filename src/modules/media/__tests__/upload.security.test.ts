@@ -1,7 +1,7 @@
 import { UploadService } from '@/modules/media/services/upload.service';
 import fs from 'fs/promises';
 import path from 'path';
-import { Express } from 'express';
+import type { Express } from 'express';
 
 // Mock file system operations
 jest.mock('fs/promises');

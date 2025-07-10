@@ -49,9 +49,7 @@ interface _MockMulterMiddleware extends MiddlewareFunction {
 }
 
 // Type for mock implementations
-interface MockService {
-  [key: string]: jest.Mock;
-}
+type MockService = Record<string, jest.Mock>;
 
 // Create mock services with proper types
 export const mockAuthService: DeepMockProxy<AuthService> = mock<AuthService>();
@@ -306,10 +304,10 @@ mockAuthController.login.mockImplementation(
     }
 
     if (username === 'testuser' && password === 'password123') {
-      type LoginResponse = {
+      interface LoginResponse {
         actor: typeof mockActor;
         token: string;
-      };
+      }
       const response: LoginResponse = {
         actor: mockActor,
         token: 'mock-ctrl-token-login',
@@ -504,7 +502,7 @@ export interface PostResponse {
 mockPostsController.createPost.mockImplementation(
   async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     // Authenticate user
-    const user = req.user as DbUser;
+    const user = req.user!;
     if (!user) {
       res
         .status(401)
@@ -514,8 +512,7 @@ mockPostsController.createPost.mockImplementation(
 
     // Check if this is a multipart/form-data request (used for attachments)
     const isMultipart =
-      req.headers &&
-      req.headers['content-type'] &&
+      req.headers?.['content-type'] &&
       typeof req.headers['content-type'] === 'string' &&
       req.headers['content-type'].includes('multipart/form-data');
 
@@ -644,7 +641,7 @@ mockPostsController.getPostById.mockImplementation(
 mockPostsController.getFeed.mockImplementation(
   async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     // Authenticate user (access the user object attached by auth middleware)
-    const user = req.user as DbUser;
+    const user = req.user!;
     if (!user) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -685,10 +682,10 @@ mockPostsController.getPostsByUsername.mockImplementation(
       actor: typeof mockActor & { preferredUsername: string };
     };
 
-    type GetPostsResponse = {
+    interface GetPostsResponse {
       posts: PostInResponse[];
       total: number;
-    };
+    }
 
     const response: GetPostsResponse = {
       posts: paginatedPosts as PostInResponse[],
@@ -702,7 +699,7 @@ mockPostsController.getPostsByUsername.mockImplementation(
 mockPostsController.updatePost.mockImplementation(
   async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     // Authenticate user
-    const user = req.user as DbUser;
+    const user = req.user!;
     if (!user) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -737,7 +734,7 @@ mockPostsController.updatePost.mockImplementation(
 mockPostsController.deletePost.mockImplementation(
   async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     // Authenticate user
-    const user = req.user as DbUser;
+    const user = req.user!;
     if (!user) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -763,7 +760,7 @@ let _postUnliked = false;
 mockPostsController.likePost.mockImplementation(
   async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     // Authenticate user
-    const user = req.user as DbUser;
+    const user = req.user!;
     if (!user) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
@@ -794,7 +791,7 @@ mockPostsController.likePost.mockImplementation(
 mockPostsController.unlikePost.mockImplementation(
   async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     // Authenticate user
-    const user = req.user as DbUser;
+    const user = req.user!;
     if (!user) {
       res.status(401).json({ error: 'Unauthorized' });
       return;

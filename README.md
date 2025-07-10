@@ -773,6 +773,58 @@ yarn build
 yarn start
 ```
 
+### Production Deployment
+
+#### **Quick Deployment**
+```bash
+# Automated deployment with quality checks
+yarn deploy
+```
+
+#### **Manual Deployment Steps**
+```bash
+# 1. Install dependencies
+yarn install --frozen-lockfile
+
+# 2. Run CI pipeline locally
+yarn ci:security  # Security vulnerability scan
+yarn ci:quality   # TypeScript and quality checks
+yarn ci:build     # Build verification
+
+# 3. Deploy with PM2
+yarn deploy:pm2
+
+# 4. Monitor deployment
+yarn deploy:logs
+```
+
+#### **PM2 Process Management**
+```bash
+# Start/stop/restart
+yarn deploy:pm2      # Start with PM2
+yarn deploy:stop     # Stop application
+yarn deploy:restart  # Restart application
+
+# Monitor logs
+yarn deploy:logs     # View real-time logs
+pm2 status          # Check process status
+pm2 monit           # Real-time monitoring
+```
+
+#### **Production Environment Setup**
+```bash
+# Set up PM2 to start on boot
+pm2 startup
+pm2 save
+
+# Configure environment variables
+cp .env.example .env
+# Edit .env with production values
+
+# Ensure MongoDB is running
+systemctl status mongod
+```
+
 ### Docker Deployment
 
 ```dockerfile
@@ -1001,6 +1053,38 @@ git secrets --scan
 
 # Validate file upload security
 yarn test src/modules/media/__tests__/upload.security.test.ts
+```
+
+**Production Deployment Failures:**
+```bash
+# Check PM2 process status
+pm2 status
+pm2 logs saturn-api --lines 50
+
+# Verify module resolution
+node -e "require('module-alias/register'); console.log('Module alias working')"
+
+# Test database connection
+mongosh --eval "db.runCommand('ping')"
+
+# Check environment variables
+env | grep -E "(NODE_ENV|PORT|MONGO_URI|JWT_SECRET)"
+
+# Verify build artifacts
+ls -la dist/
+node dist/index.js --version || echo "Check for module resolution issues"
+```
+
+**Module Resolution Issues:**
+```bash
+# Ensure module-alias is installed in production
+yarn add module-alias
+
+# Verify package.json has correct aliases
+cat package.json | grep -A 5 "_moduleAliases"
+
+# Check compiled JavaScript imports
+grep -r "require('@/" dist/ | head -5
 ```
 
 **Port Already in Use:**

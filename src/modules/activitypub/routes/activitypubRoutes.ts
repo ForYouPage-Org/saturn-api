@@ -1,6 +1,7 @@
-import express, { Request, Response, Router, NextFunction } from 'express';
+import type { Request, Response, Router, NextFunction } from 'express';
+import express from 'express';
 import { ActivityPubController } from '../controllers/activitypubController';
-import { ServiceContainer } from '../../../utils/container';
+import type { ServiceContainer } from '../../../utils/container';
 import { wrapAsync } from '../../../utils/routeHandler';
 import { verifyHttpSignature } from '../../../middleware/httpSignature';
 

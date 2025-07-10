@@ -1,8 +1,9 @@
 import { z } from 'zod';
+import type {
+  OffsetPaginationQueryType} from '../../shared/schemas/common.schemas';
 import {
   objectIdSchema,
-  offsetPaginationQuerySchema,
-  OffsetPaginationQueryType,
+  offsetPaginationQuerySchema
 } from '../../shared/schemas/common.schemas';
 
 /**

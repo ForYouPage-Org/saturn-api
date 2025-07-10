@@ -94,7 +94,7 @@ export function createTestAppFromSetup(
 
     // Service lookup function
     getService: function <T>(name: keyof ServiceContainer): T | null {
-      return (this as ServiceContainer)[name] as T;
+      return (this)[name] as T;
     },
   };
 

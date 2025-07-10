@@ -1,6 +1,6 @@
 // Media controller implementation
-import { Request, Response } from 'express';
-import { MediaService } from '../services/media.service';
+import type { Request, Response } from 'express';
+import type { MediaService } from '../services/media.service';
 import { UploadService } from '../services/upload.service';
 import path from 'path';
 import config from '../../../config';
