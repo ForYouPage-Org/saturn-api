@@ -12,6 +12,7 @@ import { compatibilityMiddleware } from './middleware/compatibilityMiddleware';
 import { defaultRateLimiter } from './middleware/rateLimiter';
 import { initPlugins } from './plugins';
 import config from './config';
+import healthRouter from './routes/health';
 import helmet from 'helmet';
 import logger from './utils/logger';
 
@@ -104,6 +105,9 @@ export async function startServer(): Promise<{
     // Apply middlewares for services and backwards compatibility
     app.use(serviceMiddleware(services));
     app.use(compatibilityMiddleware as RequestHandler);
+
+    // Health check routes (should be early in the middleware stack)
+    app.use('/', healthRouter);
 
     // Register routes using the standardized configuration pattern
     // Mount each router at an appropriate base path

@@ -167,10 +167,9 @@ export class ActorsController {
           return;
         }
       } catch {
-        // If service method fails, try repository access as fallback
+        // If service method fails, try direct deletion
         const objectId = new ObjectId(actorId);
-        const actorRepository = this.actorService.actorRepository;
-        const success = await actorRepository.deleteById(objectId);
+        const success = await this.actorService.deleteActor(actorId);
 
         if (!success) {
           throw new AppError('Actor not found', 404, ErrorType.NOT_FOUND);

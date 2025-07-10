@@ -42,7 +42,10 @@
     "deploy:pm2": "pm2 start ecosystem.config.js --env production",
     "deploy:stop": "pm2 stop saturn-api",
     "deploy:restart": "pm2 restart saturn-api",
-    "deploy:logs": "pm2 logs saturn-api"
+    "deploy:logs": "pm2 logs saturn-api",
+    "verify:mongodb": "node scripts/verify-mongodb.js",
+    "verify:health": "curl -f http://localhost:4000/health || echo 'Health check failed'",
+    "verify:production": "chmod +x scripts/production-health-check.sh && ./scripts/production-health-check.sh"
   },
   "_moduleAliases": {
     "@": "dist"
