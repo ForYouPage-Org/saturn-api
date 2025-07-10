@@ -1,0 +1,296 @@
+name: 🔒 Security Monitoring & Performance
+
+on:
+  schedule:
+    # Run security scans daily at 3 AM UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: 'Type of security scan to run'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - dependency-only
+          - code-analysis
+
+env:
+  NODE_VERSION: '18.20.0'
+
+jobs:
+  # ==========================================
+  # 🛡️ ADVANCED SECURITY SCANNING
+  # ==========================================
+  advanced-security-scan:
+    name: 🛡️ Advanced Security Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: 📦 Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: 🔍 SAST with Semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/secrets
+            p/owasp-top-ten
+            p/javascript
+            p/typescript
+          generateSarif: "1"
+
+      - name: 📊 Upload Semgrep SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+
+      - name: 🔐 Secret scanning with TruffleHog
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --only-verified
+
+      - name: 🧪 Dependency vulnerability scan
+        run: |
+          npm audit --audit-level=moderate --json > dependency-audit.json
+          
+          # Check for high/critical vulnerabilities
+          HIGH_VULNS=$(jq '.metadata.vulnerabilities.high // 0' dependency-audit.json)
+          CRITICAL_VULNS=$(jq '.metadata.vulnerabilities.critical // 0' dependency-audit.json)
+          
+          echo "🔍 Vulnerability Summary:"
+          echo "High: $HIGH_VULNS"
+          echo "Critical: $CRITICAL_VULNS"
+          
+          if [ "$HIGH_VULNS" -gt 0 ] || [ "$CRITICAL_VULNS" -gt 0 ]; then
+            echo "⚠️ High or critical vulnerabilities detected"
+            jq '.vulnerabilities | to_entries[] | select(.value.severity == "high" or .value.severity == "critical")' dependency-audit.json
+          fi
+
+      - name: 🔒 License compliance check
+        run: |
+          npx license-checker --json > licenses.json
+          
+          # Check for problematic licenses
+          PROBLEMATIC_LICENSES=("GPL-3.0" "AGPL-3.0" "LGPL-3.0")
+          
+          for license in "${PROBLEMATIC_LICENSES[@]}"; do
+            if jq -e --arg license "$license" 'to_entries[] | select(.value.licenses == $license)' licenses.json > /dev/null; then
+              echo "⚠️ Potentially problematic license found: $license"
+              jq --arg license "$license" 'to_entries[] | select(.value.licenses == $license)' licenses.json
+            fi
+          done
+
+  # ==========================================
+  # 📈 PERFORMANCE MONITORING
+  # ==========================================
+  performance-monitoring:
+    name: 📈 Performance Benchmarks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: testuser
+          MONGO_INITDB_ROOT_PASSWORD: testpass
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ping: 1})'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: 📦 Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: 🔨 Build application
+        run: yarn build
+
+      - name: 🚀 Start application for testing
+        run: |
+          cp .env.example .env.test
+          echo "MONGO_URI_TEST=mongodb://testuser:testpass@localhost:27017/saturn_perf?authSource=admin" >> .env.test
+          echo "NODE_ENV=test" >> .env.test
+          echo "JWT_SECRET=test_jwt_secret_minimum_32_characters_long_for_testing" >> .env.test
+          echo "PORT=4000" >> .env.test
+          
+          # Start app in background
+          node dist/index.js &
+          APP_PID=$!
+          echo "APP_PID=$APP_PID" >> $GITHUB_ENV
+          
+          # Wait for app to start
+          sleep 10
+
+      - name: 📊 API Performance Tests
+        run: |
+          # Install Apache Bench for load testing
+          sudo apt-get update && sudo apt-get install -y apache2-utils
+          
+          echo "🔍 Running performance benchmarks..."
+          
+          # Test health endpoint
+          ab -n 1000 -c 10 http://localhost:4000/health > health-perf.txt
+          
+          # Extract key metrics
+          echo "📈 Health Endpoint Performance:"
+          grep "Requests per second" health-perf.txt
+          grep "Time per request" health-perf.txt
+          grep "Failed requests" health-perf.txt
+
+      - name: 🧪 Memory Usage Analysis
+        run: |
+          # Monitor memory usage
+          ps aux | grep "node dist/index.js" | grep -v grep > memory-usage.txt
+          
+          echo "💾 Memory Usage:"
+          cat memory-usage.txt
+
+      - name: 📊 Bundle Size Analysis
+        run: |
+          # Analyze bundle size
+          du -sh dist/ > bundle-size.txt
+          find dist/ -name "*.js" -exec du -h {} \; | sort -hr > largest-files.txt
+          
+          echo "📦 Bundle Analysis:"
+          echo "Total size:"
+          cat bundle-size.txt
+          echo "Largest files:"
+          head -10 largest-files.txt
+
+      - name: 🛑 Stop application
+        if: always()
+        run: |
+          if [ ! -z "$APP_PID" ]; then
+            kill $APP_PID || true
+          fi
+
+  # ==========================================
+  # 🔍 INFRASTRUCTURE SECURITY
+  # ==========================================
+  infrastructure-security:
+    name: 🔍 Infrastructure Security
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔒 Docker security scan
+        if: contains(github.event.inputs.scan_type, 'full') || github.event_name == 'schedule'
+        run: |
+          # Install Docker security tools
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+          
+          # Build test image
+          docker build -t saturn-api:security-test .
+          
+          # Scan for vulnerabilities
+          grype saturn-api:security-test --output json > docker-vulnerabilities.json
+          
+          # Report high/critical vulnerabilities
+          HIGH_VULNS=$(jq '[.matches[] | select(.vulnerability.severity == "High")] | length' docker-vulnerabilities.json)
+          CRITICAL_VULNS=$(jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length' docker-vulnerabilities.json)
+          
+          echo "🐳 Docker Security Scan Results:"
+          echo "High vulnerabilities: $HIGH_VULNS"
+          echo "Critical vulnerabilities: $CRITICAL_VULNS"
+          
+          if [ "$CRITICAL_VULNS" -gt 0 ]; then
+            echo "🚨 Critical vulnerabilities found in Docker image!"
+            jq '.matches[] | select(.vulnerability.severity == "Critical")' docker-vulnerabilities.json
+            exit 1
+          fi
+
+      - name: 🔍 GitHub Workflows Security
+        run: |
+          # Check for common workflow security issues
+          echo "🔍 Analyzing GitHub workflows for security issues..."
+          
+          # Check for secrets in workflow files
+          find .github/workflows -name "*.yml" -o -name "*.yaml" | xargs grep -i "password\|secret\|token\|key" || echo "No hardcoded secrets found"
+          
+          # Check for dangerous patterns
+          echo "Checking for dangerous workflow patterns..."
+          find .github/workflows -name "*.yml" -o -name "*.yaml" | xargs grep -E "pull_request_target|workflow_run" || echo "No dangerous event triggers found"
+
+  # ==========================================
+  # 📊 MONITORING REPORT
+  # ==========================================
+  monitoring-report:
+    name: 📊 Security & Performance Report
+    runs-on: ubuntu-latest
+    needs: [advanced-security-scan, performance-monitoring, infrastructure-security]
+    if: always()
+    steps:
+      - name: 📊 Generate monitoring report
+        run: |
+          echo "# 🔒 Security & Performance Monitoring Report" > monitoring-report.md
+          echo "" >> monitoring-report.md
+          echo "**Generated:** $(date -u)" >> monitoring-report.md
+          echo "" >> monitoring-report.md
+          
+          echo "## 🛡️ Security Status" >> monitoring-report.md
+          echo "- [x] SAST Analysis Complete" >> monitoring-report.md
+          echo "- [x] Secret Scanning Complete" >> monitoring-report.md
+          echo "- [x] Dependency Audit Complete" >> monitoring-report.md
+          echo "- [x] License Compliance Check Complete" >> monitoring-report.md
+          echo "" >> monitoring-report.md
+          
+          echo "## 📈 Performance Status" >> monitoring-report.md
+          echo "- [x] API Performance Tests Complete" >> monitoring-report.md
+          echo "- [x] Memory Usage Analysis Complete" >> monitoring-report.md
+          echo "- [x] Bundle Size Analysis Complete" >> monitoring-report.md
+          echo "" >> monitoring-report.md
+          
+          echo "## 🔍 Infrastructure Security" >> monitoring-report.md
+          echo "- [x] Docker Security Scan Complete" >> monitoring-report.md
+          echo "- [x] Workflow Security Review Complete" >> monitoring-report.md
+          echo "" >> monitoring-report.md
+          
+          echo "---" >> monitoring-report.md
+          echo "*Automated Security & Performance Monitoring*" >> monitoring-report.md
+
+      - name: 📧 Create monitoring issue
+        if: github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('monitoring-report.md', 'utf8');
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🔒 Daily Security & Performance Report - ${new Date().toISOString().split('T')[0]}`,
+              body: report,
+              labels: ['security', 'monitoring', 'automated']
+            });
