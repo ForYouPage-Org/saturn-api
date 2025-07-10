@@ -234,7 +234,7 @@ export class ActorRepository extends MongoRepository<Actor> {
     return this.deleteOne({ preferredUsername });
   }
 
-  async findById(id: string | ObjectId): Promise<Actor | null> {
+  override async findById(id: string | ObjectId): Promise<Actor | null> {
     try {
       // If id is an ObjectId already, use it directly
       const objectId = id instanceof ObjectId ? id : new ObjectId(id);

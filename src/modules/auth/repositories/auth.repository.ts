@@ -49,7 +49,7 @@ export class AuthRepository extends MongoRepository<DbUser> {
     return this.findOne({ email });
   }
 
-  async findById(id: string): Promise<DbUser | null> {
+  override async findById(id: string): Promise<DbUser | null> {
     console.log('[AuthRepository] Looking up user by id:', id);
 
     // Try to find by _id field first

@@ -26,7 +26,7 @@ export class MediaController {
       });
 
       // Use multer to handle the file upload
-      upload.single('file')(req, res, async err => {
+      upload.single('file')(req as any, res as any, async err => {
         if (err) {
           res.status(400).json({ error: err.message });
           return;

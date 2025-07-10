@@ -116,7 +116,7 @@ export class PostRepository extends MongoRepository<Post> {
     );
   }
 
-  async deleteById(postId: string): Promise<boolean> {
+  override async deleteById(postId: string): Promise<boolean> {
     return this.deleteOne({ id: postId });
   }
 

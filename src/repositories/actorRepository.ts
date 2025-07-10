@@ -62,7 +62,7 @@ export class ActorRepository extends MongoRepository<Actor> {
       .toArray();
   }
 
-  async findById(id: string | ObjectId): Promise<Actor | null> {
+  override async findById(id: string | ObjectId): Promise<Actor | null> {
     try {
       const objectId = typeof id === 'string' ? new ObjectId(id) : id;
       // Pass the ObjectId directly to the filter
