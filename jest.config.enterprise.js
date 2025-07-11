@@ -1,169 +1,100 @@
-/** @type {import('jest').Config} */
+// Enterprise-grade Jest configuration with strict coverage requirements
 module.exports = {
-  // Base configuration
   preset: 'ts-jest',
   testEnvironment: 'node',
   
-  // Test discovery
-  roots: ['<rootDir>/test', '<rootDir>/src'],
+  // Test file patterns
   testMatch: [
-    '**/__tests__/**/*.ts',
-    '**/*.test.ts',
-    '**/*.spec.ts'
+    '<rootDir>/test/**/*.test.ts',
+    '<rootDir>/test/**/*.spec.ts'
   ],
   
-  // TypeScript support
-  transform: {
-    '^.+\\.tsx?$': [
-      'ts-jest',
-      {
-        tsconfig: {
-          compilerOptions: {
-            // Use strict compilation for tests
-            strict: true,
-            exactOptionalPropertyTypes: true,
-            noUncheckedIndexedAccess: true,
-            noImplicitOverride: true,
-            useUnknownInCatchVariables: true,
-          },
-        },
-      },
-    ],
-  },
-  
-  // Module resolution
-  moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1',
-    '^@test/(.*)$': '<rootDir>/test/$1',
-  },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  
-  // Setup
-  setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
-  
-  // Coverage configuration (Enterprise standards)
+  // Coverage configuration
   collectCoverage: true,
   coverageDirectory: 'coverage',
-  coverageReporters: [
-    'text',
-    'text-summary',
-    'html',
-    'lcov',
-    'json',
-    'json-summary',
-    'cobertura', // For CI/CD integration
-  ],
+  coverageReporters: ['text', 'lcov', 'html', 'json'],
   
-  // Comprehensive coverage collection
-  collectCoverageFrom: [
-    'src/**/*.{ts,tsx}',
-    '!src/**/*.d.ts',
-    '!src/types/**/*.ts',
-    '!src/index.ts', // Entry point excluded
-    '!src/**/*.interface.ts',
-    '!src/**/*.enum.ts',
-    '!src/**/*.constant.ts',
-    '!**/node_modules/**',
-    '!**/vendor/**',
-  ],
-  
-  // Enterprise-grade coverage thresholds
+  // Strict coverage thresholds for production
   coverageThreshold: {
     global: {
       statements: 80,
       branches: 75,
       functions: 80,
-      lines: 80,
+      lines: 80
     },
-    // Module-specific thresholds
+    // Critical modules require higher coverage
     './src/modules/auth/**/*.ts': {
       statements: 90,
       branches: 85,
       functions: 90,
-      lines: 90,
+      lines: 90
     },
     './src/modules/actors/**/*.ts': {
       statements: 85,
       branches: 80,
       functions: 85,
-      lines: 85,
+      lines: 85
     },
     './src/utils/**/*.ts': {
       statements: 95,
       branches: 90,
       functions: 95,
-      lines: 95,
+      lines: 95
     },
+    './src/middleware/**/*.ts': {
+      statements: 85,
+      branches: 80,
+      functions: 85,
+      lines: 85
+    }
   },
   
-  // Performance and timeout
-  testTimeout: 30000,
-  maxWorkers: '50%',
+  // Files to include in coverage
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/types/**/*.ts',
+    '!src/**/*.spec.ts',
+    '!src/**/*.test.ts'
+  ],
   
-  // Error handling
-  bail: false, // Don't stop on first failure in CI
+  // Test setup
+  setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
+  
+  // Module resolution
+  moduleNameMapping: {
+    '^@/(.*)$': '<rootDir>/src/$1'
+  },
+  
+  // Performance settings
+  maxWorkers: '50%',
+  testTimeout: 30000,
+  
+  // Globals
+  globals: {
+    'ts-jest': {
+      tsconfig: 'tsconfig.json',
+      isolatedModules: true
+    }
+  },
+  
+  // Verbose output for CI/CD
   verbose: true,
   
-  // Test isolation
-  clearMocks: true,
-  resetMocks: true,
-  restoreMocks: true,
-  
-  // Watch mode (for development)
-  watchPlugins: [
-    'jest-watch-typeahead/filename',
-    'jest-watch-typeahead/testname',
-  ],
-  
-  // Reporter configuration
-  reporters: [
-    'default',
-    [
-      'jest-junit',
-      {
-        outputDirectory: 'coverage',
-        outputName: 'junit.xml',
-        ancestorSeparator: ' › ',
-        uniqueOutputName: 'false',
-        suiteNameTemplate: '{filepath}',
-        classNameTemplate: '{classname}',
-        titleTemplate: '{title}',
-      },
-    ],
-    [
-      'jest-html-reporters',
-      {
-        publicPath: 'coverage/html',
-        filename: 'test-report.html',
-        expand: true,
-        hideIcon: false,
-      },
-    ],
-  ],
-  
-  // Global test setup
-  globalSetup: '<rootDir>/test/global-setup.ts',
-  globalTeardown: '<rootDir>/test/global-teardown.ts',
-  
-  // Environment variables
-  testEnvironmentOptions: {
-    NODE_ENV: 'test',
-  },
-  
-  // Advanced configuration
-  detectOpenHandles: true,
-  detectLeaks: true,
-  forceExit: false,
-  
-  // Error thresholds
+  // Error handling
+  bail: 1,
   errorOnDeprecated: true,
   
-  // Snapshot configuration
-  updateSnapshot: false,
-  
-  // Custom matchers
-  setupFilesAfterEnv: [
-    '<rootDir>/test/setup.ts',
-    '<rootDir>/test/custom-matchers.ts',
-  ],
+  // Test result formatting
+  reporters: [
+    'default',
+    ['jest-junit', {
+      outputDirectory: 'coverage',
+      outputName: 'junit.xml',
+      classNameTemplate: '{classname}',
+      titleTemplate: '{title}',
+      ancestorSeparator: ' › ',
+      usePathForSuiteName: true
+    }]
+  ]
 };
