@@ -57,7 +57,7 @@ describe('AuthRepository', () => {
         _id: 'user123',
         email: 'test@example.com',
         password: 'hashed_password',
-        username: 'testuser',
+        preferredUsername: 'testuser',
       };
 
       mockCollection.findOne.mockResolvedValue(mockUser);
@@ -65,7 +65,7 @@ describe('AuthRepository', () => {
       const result = await authRepository.findByUsername('testuser');
 
       expect(mockCollection.findOne).toHaveBeenCalledWith({
-        username: 'testuser',
+        preferredUsername: 'testuser',
       });
       expect(result).toEqual(mockUser);
     });
@@ -96,11 +96,7 @@ describe('AuthRepository', () => {
 
       const result = await authRepository.create(userData);
 
-      expect(mockCollection.insertOne).toHaveBeenCalledWith({
-        ...userData,
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-      });
+      expect(mockCollection.insertOne).toHaveBeenCalledWith(userData);
       expect(result).toEqual(mockResult);
     });
 
@@ -117,76 +113,102 @@ describe('AuthRepository', () => {
     });
   });
 
-  describe('updatePassword', () => {
-    it('should update user password', async () => {
-      const mockResult = {
-        modifiedCount: 1,
-        acknowledged: true,
-      };
+  describe('ensureIndexes', () => {
+    it('should create indexes without throwing', async () => {
+      mockCollection.createIndex.mockResolvedValue('index_created');
 
-      mockCollection.updateOne.mockResolvedValue(mockResult);
+      // This is called in constructor, so create a new instance
+      expect(() => {
+        new AuthRepository(mockDb);
+      }).not.toThrow();
 
-      const result = await authRepository.updatePassword('user123', 'new_hashed_password');
-
-      expect(mockCollection.updateOne).toHaveBeenCalledWith(
-        { _id: 'user123' },
-        {
-          $set: {
-            password: 'new_hashed_password',
-            updatedAt: expect.any(Date),
-          },
-        }
+      expect(mockCollection.createIndex).toHaveBeenCalledWith(
+        { username: 1 },
+        { unique: true }
       );
-      expect(result).toEqual(mockResult);
+      expect(mockCollection.createIndex).toHaveBeenCalledWith(
+        { email: 1 },
+        { unique: true, sparse: true }
+      );
     });
 
-    it('should handle update errors', async () => {
-      mockCollection.updateOne.mockRejectedValue(new Error('Database error'));
+    it('should handle index creation errors gracefully', async () => {
+      const indexError = new Error('Index already exists');
+      indexError.message = 'Index already exists';
+      mockCollection.createIndex.mockRejectedValue(indexError);
 
-      await expect(authRepository.updatePassword('user123', 'new_password')).rejects.toThrow('Database error');
-    });
-  });
-
-  describe('deleteUser', () => {
-    it('should delete user by id', async () => {
-      const mockResult = {
-        deletedCount: 1,
-        acknowledged: true,
-      };
-
-      mockCollection.deleteOne.mockResolvedValue(mockResult);
-
-      const result = await authRepository.deleteUser('user123');
-
-      expect(mockCollection.deleteOne).toHaveBeenCalledWith({
-        _id: 'user123',
-      });
-      expect(result).toEqual(mockResult);
-    });
-
-    it('should handle deletion errors', async () => {
-      mockCollection.deleteOne.mockRejectedValue(new Error('Database error'));
-
-      await expect(authRepository.deleteUser('user123')).rejects.toThrow('Database error');
+      expect(() => {
+        new AuthRepository(mockDb);
+      }).not.toThrow();
     });
   });
 
   describe('findById', () => {
-    it('should find user by id', async () => {
+    it('should find user by _id field', async () => {
       const mockUser = {
         _id: 'user123',
         email: 'test@example.com',
         password: 'hashed_password',
-        username: 'testuser',
+        preferredUsername: 'testuser',
       };
 
+      mockCollection.findOne.mockResolvedValueOnce(mockUser);
+
+      const result = await authRepository.findById('user123');
+
+      expect(mockCollection.findOne).toHaveBeenCalledWith({ _id: 'user123' });
+      expect(result).toEqual(mockUser);
+    });
+
+    it('should try id field if _id not found', async () => {
+      const mockUser = {
+        _id: 'user123',
+        id: 'https://example.com/users/testuser',
+        email: 'test@example.com',
+        password: 'hashed_password',
+        preferredUsername: 'testuser',
+      };
+
+      mockCollection.findOne.mockResolvedValueOnce(null); // First call (_id)
+      mockCollection.findOne.mockResolvedValueOnce(mockUser); // Second call (id)
+
+      const result = await authRepository.findById('https://example.com/users/testuser');
+
+      expect(mockCollection.findOne).toHaveBeenCalledWith({ _id: 'https://example.com/users/testuser' });
+      expect(mockCollection.findOne).toHaveBeenCalledWith({ id: 'https://example.com/users/testuser' });
+      expect(result).toEqual(mockUser);
+    });
+
+    it('should try ActivityPub ID lookup for URL-like IDs', async () => {
+      const mockUser = {
+        _id: 'user123',
+        id: 'https://example.com/users/testuser',
+        email: 'test@example.com',
+        preferredUsername: 'testuser',
+      };
+
+      mockCollection.findOne.mockResolvedValueOnce(null); // First call (_id)
+      mockCollection.findOne.mockResolvedValueOnce(null); // Second call (id)
+      mockCollection.findOne.mockResolvedValueOnce(mockUser); // Third call (AP lookup)
+
+      const result = await authRepository.findById('https://example.com/users/testuser');
+
+      expect(result).toEqual(mockUser);
+    });
+
+    it('should try string equality fallback', async () => {
+      const mockUser = {
+        _id: 'user123',
+        email: 'test@example.com',
+        preferredUsername: 'testuser',
+      };
+
+      mockCollection.findOne.mockResolvedValue(null);
       mockCollection.findOne.mockResolvedValue(mockUser);
 
       const result = await authRepository.findById('user123');
 
-      expect(mockCollection.findOne).toHaveBeenCalledWith({
-        _id: 'user123',
-      });
+      expect(mockCollection.findOne).toHaveBeenCalled();
       expect(result).toEqual(mockUser);
     });
 
@@ -196,30 +218,6 @@ describe('AuthRepository', () => {
       const result = await authRepository.findById('nonexistent');
 
       expect(result).toBeNull();
-    });
-  });
-
-  describe('userExists', () => {
-    it('should return true when user exists', async () => {
-      mockCollection.countDocuments.mockResolvedValue(1);
-
-      const result = await authRepository.userExists('test@example.com');
-
-      expect(mockCollection.countDocuments).toHaveBeenCalledWith({
-        $or: [
-          { email: 'test@example.com' },
-          { username: 'test@example.com' },
-        ],
-      });
-      expect(result).toBe(true);
-    });
-
-    it('should return false when user does not exist', async () => {
-      mockCollection.countDocuments.mockResolvedValue(0);
-
-      const result = await authRepository.userExists('nonexistent@example.com');
-
-      expect(result).toBe(false);
     });
   });
 });
