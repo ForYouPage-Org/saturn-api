@@ -173,6 +173,16 @@ All API endpoints are relative to your server's base URL:
 http://localhost:4000
 ```
 
+### Testing Server
+
+A live testing server is available at:
+
+```
+https://saturn.foryoupage.org/api
+```
+
+**Note:** This is a testing environment for development and demonstration purposes. Data may be reset periodically.
+
 ### Authentication
 
 Most endpoints require authentication via JWT tokens:

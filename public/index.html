@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Saturn</title>
+    <meta name="description" content="Own Your Orbit" />
+
+    <!-- Apple-style meta tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Saturn" />
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+          "Segoe UI", sans-serif;
+        background: #000;
+        color: #fff;
+        overflow-x: hidden;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+      }
+
+      /* Star field background */
+      .stars {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        z-index: 1;
+      }
+
+      .star {
+        position: absolute;
+        width: 2px;
+        height: 2px;
+        background: #fff;
+        border-radius: 50%;
+        animation: twinkle 3s infinite;
+      }
+
+      @keyframes twinkle {
+        0%,
+        100% {
+          opacity: 0.3;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      /* Main content */
+      .main-content {
+        text-align: center;
+        z-index: 2;
+        position: relative;
+        max-width: 900px;
+        padding: 40px 20px;
+        background: radial-gradient(
+          ellipse at center,
+          rgba(59, 130, 246, 0.15) 0%,
+          rgba(139, 69, 19, 0.1) 50%,
+          transparent 100%
+        );
+        border-radius: 40px;
+      }
+
+      .saturn-emoji {
+        font-size: 120px;
+        margin-bottom: 30px;
+        display: block;
+        animation: float 6s ease-in-out infinite;
+      }
+
+      .title {
+        font-size: clamp(48px, 8vw, 80px);
+        font-weight: 700;
+        margin-bottom: 20px;
+        letter-spacing: -2px;
+        background: linear-gradient(135deg, #fff 0%, #e0e0e0 50%, #fff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .tagline {
+        font-size: clamp(20px, 4vw, 32px);
+        font-weight: 500;
+        margin-bottom: 40px;
+        color: #fff;
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.5),
+          0 0 40px rgba(255, 255, 255, 0.3);
+        animation: glow 3s ease-in-out infinite alternate;
+        line-height: 1.3;
+      }
+
+      @keyframes glow {
+        from {
+          text-shadow: 0 0 20px rgba(255, 255, 255, 0.5),
+            0 0 40px rgba(255, 255, 255, 0.3);
+        }
+        to {
+          text-shadow: 0 0 30px rgba(255, 255, 255, 0.8),
+            0 0 60px rgba(255, 255, 255, 0.5);
+        }
+      }
+
+      .cta-button {
+        display: inline-block;
+        padding: 16px 40px;
+        background: #fff;
+        color: #000;
+        text-decoration: none;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 18px;
+        transition: all 0.3s ease;
+        margin-bottom: 16px;
+      }
+
+      .cta-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(255, 255, 255, 0.3);
+      }
+
+      .subtitle {
+        font-size: clamp(16px, 2.5vw, 20px);
+        font-weight: 400;
+        background: linear-gradient(135deg, #007AFF 0%, #8B5CF6 50%, #FF6B35 100%);
+        background-size: 400% 400%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: gradientShift 4s ease-in-out infinite;
+        line-height: 1.4;
+        margin-top: 16px;
+      }
+
+      @keyframes gradientShift {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      /* Mobile responsive */
+      @media (max-width: 768px) {
+        .saturn-emoji {
+          font-size: 80px;
+          margin-bottom: 20px;
+        }
+
+        .title {
+          margin-bottom: 15px;
+        }
+
+        .subtitle {
+          margin-bottom: 30px;
+        }
+
+        .cta-button {
+          padding: 14px 32px;
+          font-size: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Star field -->
+    <div class="stars" id="stars"></div>
+
+    <!-- Main content -->
+    <div class="main-content">
+      <div class="saturn-emoji">🪐</div>
+      <h1 class="title">Saturn</h1>
+      <p class="tagline">Decentralized. Customizable. Community-Owned.</p>
+      <a
+        href="mailto:hello@foryoupage.org?subject=Early%20Access"
+        class="cta-button"
+        >Get Early Access</a
+      >
+      <p class="subtitle">A Social Media for the Future by FYP + UE Lab</p>
+    </div>
+
+    <script>
+      // Generate stars
+      function createStars() {
+        const starsContainer = document.getElementById("stars");
+        const numStars = 100;
+
+        for (let i = 0; i < numStars; i++) {
+          const star = document.createElement("div");
+          star.className = "star";
+          star.style.left = Math.random() * 100 + "%";
+          star.style.top = Math.random() * 100 + "%";
+          star.style.animationDelay = Math.random() * 3 + "s";
+          star.style.animationDuration = Math.random() * 3 + 2 + "s";
+          starsContainer.appendChild(star);
+        }
+      }
+
+      // Initialize stars when page loads
+      document.addEventListener("DOMContentLoaded", createStars);
+
+      // Add subtle mouse movement effect
+      document.addEventListener("mousemove", function (e) {
+        const stars = document.querySelectorAll(".star");
+        const x = e.clientX / window.innerWidth;
+        const y = e.clientY / window.innerHeight;
+
+        stars.forEach((star, index) => {
+          const speed = ((index % 3) + 1) * 0.5;
+          const xOffset = (x - 0.5) * speed;
+          const yOffset = (y - 0.5) * speed;
+
+          star.style.transform = `translate(${xOffset}px, ${yOffset}px)`;
+        });
+      });
+    </script>
+  </body>
+</html>
