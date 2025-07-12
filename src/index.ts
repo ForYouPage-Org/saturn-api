@@ -57,10 +57,16 @@ if (
 // Root route handler
 app.get('/', (req, res) => {
   res.json({
-    message: 'FYP-Saturn API Server',
+    message: 'Own Your Orbit! - FYP-Saturn API Server',
     version: '0.1.0',
     documentation: '/api/docs',
     status: 'online',
+    endpoints: {
+      auth: '/api/auth',
+      posts: '/api/posts',
+      actors: '/api/actors',
+      health: '/health'
+    }
   });
 });
 
