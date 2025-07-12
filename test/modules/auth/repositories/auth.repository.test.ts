@@ -1,16 +1,16 @@
-import { AuthRepository } from '../../../../src/modules/auth/repositories/auth.repository';
-import type { DbUser } from '../../../../src/modules/auth/models/user';
-import type { Db } from 'mongodb';
-import { MongoServerError } from 'mongodb';
-import { jest } from '@jest/globals';
+import { AuthRepository } from "../../../../src/modules/auth/repositories/auth.repository";
+import type { DbUser } from "../../../../src/modules/auth/models/user";
+import type { Db } from "mongodb";
+import { MongoServerError } from "mongodb";
+import { jest } from "@jest/globals";
 
 // Mock logger
-jest.mock('../../../../src/utils/logger', () => ({
+jest.mock("../../../../src/utils/logger", () => ({
   warn: jest.fn(),
   error: jest.fn(),
 }));
 
-describe('AuthRepository', () => {
+describe("AuthRepository", () => {
   let mockDb: jest.Mocked<Db>;
   let mockCollection: any;
   let authRepository: AuthRepository;
@@ -37,10 +37,10 @@ describe('AuthRepository', () => {
     jest.clearAllMocks();
   });
 
-  describe('constructor and ensureIndexes', () => {
-    it('should create indexes during initialization', async () => {
+  describe("constructor and ensureIndexes", () => {
+    it("should create indexes during initialization", async () => {
       // Wait for async index creation
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(mockCollection.createIndex).toHaveBeenCalledWith(
         { username: 1 },
@@ -52,10 +52,10 @@ describe('AuthRepository', () => {
       );
     });
 
-    it('should handle IndexOptionsConflict errors gracefully', async () => {
+    it("should handle IndexOptionsConflict errors gracefully", async () => {
       const indexConflictError = new MongoServerError({
-        message: 'index already exists with different options',
-        codeName: 'IndexOptionsConflict',
+        message: "index already exists with different options",
+        codeName: "IndexOptionsConflict",
       });
 
       mockCollection.createIndex.mockRejectedValue(indexConflictError);
@@ -64,15 +64,15 @@ describe('AuthRepository', () => {
       const newAuthRepository = new AuthRepository(mockDb);
 
       // Wait for async index creation
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(mockCollection.createIndex).toHaveBeenCalled();
     });
 
-    it('should handle IndexKeySpecsConflict errors gracefully', async () => {
+    it("should handle IndexKeySpecsConflict errors gracefully", async () => {
       const indexConflictError = new MongoServerError({
-        message: 'index key specs conflict',
-        codeName: 'IndexKeySpecsConflict',
+        message: "index key specs conflict",
+        codeName: "IndexKeySpecsConflict",
       });
 
       mockCollection.createIndex.mockRejectedValue(indexConflictError);
@@ -81,14 +81,14 @@ describe('AuthRepository', () => {
       const newAuthRepository = new AuthRepository(mockDb);
 
       // Wait for async index creation
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(mockCollection.createIndex).toHaveBeenCalled();
     });
 
     it('should handle "already exists" errors gracefully', async () => {
       const indexExistsError = new MongoServerError({
-        message: 'index already exists',
+        message: "index already exists",
       });
 
       mockCollection.createIndex.mockRejectedValue(indexExistsError);
@@ -97,13 +97,13 @@ describe('AuthRepository', () => {
       const newAuthRepository = new AuthRepository(mockDb);
 
       // Wait for async index creation
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(mockCollection.createIndex).toHaveBeenCalled();
     });
 
-    it('should handle other index creation errors', async () => {
-      const otherError = new Error('Some other database error');
+    it("should handle other index creation errors", async () => {
+      const otherError = new Error("Some other database error");
 
       mockCollection.createIndex.mockRejectedValue(otherError);
 
@@ -111,25 +111,25 @@ describe('AuthRepository', () => {
       const newAuthRepository = new AuthRepository(mockDb);
 
       // Wait for async index creation
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(mockCollection.createIndex).toHaveBeenCalled();
     });
 
-    it('should initialize with correct collection name', () => {
-      expect(mockDb.collection).toHaveBeenCalledWith('actors');
+    it("should initialize with correct collection name", () => {
+      expect(mockDb.collection).toHaveBeenCalledWith("actors");
     });
   });
 
-  describe('findByUsername', () => {
-    it('should find user by username', async () => {
+  describe("findByUsername", () => {
+    it("should find user by username", async () => {
       const mockUser: DbUser = {
-        _id: 'user123',
-        id: 'user123',
-        username: 'testuser',
-        preferredUsername: 'testuser',
-        password: 'hashed_password',
-        email: 'test@example.com',
+        _id: "user123",
+        id: "user123",
+        username: "testuser",
+        preferredUsername: "testuser",
+        password: "hashed_password",
+        email: "test@example.com",
         followers: [],
         following: [],
         createdAt: new Date(),
@@ -138,44 +138,50 @@ describe('AuthRepository', () => {
 
       mockCollection.findOne.mockResolvedValue(mockUser);
 
-      const result = await authRepository.findByUsername('testuser');
+      const result = await authRepository.findByUsername("testuser");
 
-      expect(mockCollection.findOne).toHaveBeenCalledWith({ preferredUsername: 'testuser' });
+      expect(mockCollection.findOne).toHaveBeenCalledWith({
+        username: "testuser",
+      });
       expect(result).toEqual(mockUser);
     });
 
-    it('should return null when user not found', async () => {
+    it("should return null when user not found", async () => {
       mockCollection.findOne.mockResolvedValue(null);
 
-      const result = await authRepository.findByUsername('nonexistent');
+      const result = await authRepository.findByUsername("nonexistent");
 
-      expect(mockCollection.findOne).toHaveBeenCalledWith({ preferredUsername: 'nonexistent' });
+      expect(mockCollection.findOne).toHaveBeenCalledWith({
+        username: "nonexistent",
+      });
       expect(result).toBeNull();
     });
 
-    it('should handle database errors', async () => {
-      mockCollection.findOne.mockRejectedValue(new Error('Database error'));
+    it("should handle database errors", async () => {
+      mockCollection.findOne.mockRejectedValue(new Error("Database error"));
 
-      await expect(authRepository.findByUsername('testuser')).rejects.toThrow('Database error');
+      await expect(authRepository.findByUsername("testuser")).rejects.toThrow(
+        "Database error"
+      );
     });
 
-    it('should handle empty username', async () => {
+    it("should handle empty username", async () => {
       mockCollection.findOne.mockResolvedValue(null);
 
-      const result = await authRepository.findByUsername('');
+      const result = await authRepository.findByUsername("");
 
-      expect(mockCollection.findOne).toHaveBeenCalledWith({ preferredUsername: '' });
+      expect(mockCollection.findOne).toHaveBeenCalledWith({ username: "" });
       expect(result).toBeNull();
     });
 
-    it('should handle special characters in username', async () => {
+    it("should handle special characters in username", async () => {
       const specialUser: DbUser = {
-        _id: 'user123',
-        id: 'user123',
-        username: 'user@domain.com',
-        preferredUsername: 'user@domain.com',
-        password: 'hashed_password',
-        email: 'test@example.com',
+        _id: "user123",
+        id: "user123",
+        username: "user@domain.com",
+        preferredUsername: "user@domain.com",
+        password: "hashed_password",
+        email: "test@example.com",
         followers: [],
         following: [],
         createdAt: new Date(),
@@ -184,22 +190,24 @@ describe('AuthRepository', () => {
 
       mockCollection.findOne.mockResolvedValue(specialUser);
 
-      const result = await authRepository.findByUsername('user@domain.com');
+      const result = await authRepository.findByUsername("user@domain.com");
 
-      expect(mockCollection.findOne).toHaveBeenCalledWith({ preferredUsername: 'user@domain.com' });
+      expect(mockCollection.findOne).toHaveBeenCalledWith({
+        username: "user@domain.com",
+      });
       expect(result).toEqual(specialUser);
     });
   });
 
-  describe('findByEmail', () => {
-    it('should find user by email', async () => {
+  describe("findByEmail", () => {
+    it("should find user by email", async () => {
       const mockUser: DbUser = {
-        _id: 'user123',
-        id: 'user123',
-        username: 'testuser',
-        preferredUsername: 'testuser',
-        password: 'hashed_password',
-        email: 'test@example.com',
+        _id: "user123",
+        id: "user123",
+        username: "testuser",
+        preferredUsername: "testuser",
+        password: "hashed_password",
+        email: "test@example.com",
         followers: [],
         following: [],
         createdAt: new Date(),
@@ -208,55 +216,65 @@ describe('AuthRepository', () => {
 
       mockCollection.findOne.mockResolvedValue(mockUser);
 
-      const result = await authRepository.findByEmail('test@example.com');
+      const result = await authRepository.findByEmail("test@example.com");
 
-      expect(mockCollection.findOne).toHaveBeenCalledWith({ email: 'test@example.com' });
+      expect(mockCollection.findOne).toHaveBeenCalledWith({
+        email: "test@example.com",
+      });
       expect(result).toEqual(mockUser);
     });
 
-    it('should return null when user not found', async () => {
+    it("should return null when user not found", async () => {
       mockCollection.findOne.mockResolvedValue(null);
 
-      const result = await authRepository.findByEmail('nonexistent@example.com');
+      const result = await authRepository.findByEmail(
+        "nonexistent@example.com"
+      );
 
-      expect(mockCollection.findOne).toHaveBeenCalledWith({ email: 'nonexistent@example.com' });
+      expect(mockCollection.findOne).toHaveBeenCalledWith({
+        email: "nonexistent@example.com",
+      });
       expect(result).toBeNull();
     });
 
-    it('should handle database errors', async () => {
-      mockCollection.findOne.mockRejectedValue(new Error('Database error'));
+    it("should handle database errors", async () => {
+      mockCollection.findOne.mockRejectedValue(new Error("Database error"));
 
-      await expect(authRepository.findByEmail('test@example.com')).rejects.toThrow('Database error');
+      await expect(
+        authRepository.findByEmail("test@example.com")
+      ).rejects.toThrow("Database error");
     });
 
-    it('should handle invalid email formats', async () => {
+    it("should handle invalid email formats", async () => {
       mockCollection.findOne.mockResolvedValue(null);
 
-      const result = await authRepository.findByEmail('invalid-email');
+      const result = await authRepository.findByEmail("invalid-email");
 
-      expect(mockCollection.findOne).toHaveBeenCalledWith({ email: 'invalid-email' });
+      expect(mockCollection.findOne).toHaveBeenCalledWith({
+        email: "invalid-email",
+      });
       expect(result).toBeNull();
     });
 
-    it('should handle empty email', async () => {
+    it("should handle empty email", async () => {
       mockCollection.findOne.mockResolvedValue(null);
 
-      const result = await authRepository.findByEmail('');
+      const result = await authRepository.findByEmail("");
 
-      expect(mockCollection.findOne).toHaveBeenCalledWith({ email: '' });
+      expect(mockCollection.findOne).toHaveBeenCalledWith({ email: "" });
       expect(result).toBeNull();
     });
   });
 
-  describe('findById', () => {
-    it('should find user by _id field', async () => {
+  describe("findById", () => {
+    it("should find user by _id field", async () => {
       const mockUser: DbUser = {
-        _id: 'user123',
-        id: 'user123',
-        username: 'testuser',
-        preferredUsername: 'testuser',
-        password: 'hashed_password',
-        email: 'test@example.com',
+        _id: "user123",
+        id: "user123",
+        username: "testuser",
+        preferredUsername: "testuser",
+        password: "hashed_password",
+        email: "test@example.com",
         followers: [],
         following: [],
         createdAt: new Date(),
@@ -265,26 +283,34 @@ describe('AuthRepository', () => {
 
       mockCollection.findOne.mockResolvedValue(mockUser);
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
 
-      const result = await authRepository.findById('user123');
+      const result = await authRepository.findById("user123");
 
-      expect(mockCollection.findOne).toHaveBeenCalledWith({ _id: 'user123' });
+      expect(mockCollection.findOne).toHaveBeenCalledWith({ _id: "user123" });
       expect(result).toEqual(mockUser);
-      expect(consoleSpy).toHaveBeenCalledWith('[AuthRepository] Looking up user by id:', 'user123');
-      expect(consoleSpy).toHaveBeenCalledWith('[AuthRepository] findById result:', 'Found');
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "[AuthRepository] Looking up user by id:",
+        "user123"
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "[AuthRepository] findById result:",
+        "Found"
+      );
 
       consoleSpy.mockRestore();
     });
 
-    it('should try id field when _id field fails', async () => {
+    it("should try id field when _id field fails", async () => {
       const mockUser: DbUser = {
-        _id: 'user123',
-        id: 'user123',
-        username: 'testuser',
-        preferredUsername: 'testuser',
-        password: 'hashed_password',
-        email: 'test@example.com',
+        _id: "user123",
+        id: "user123",
+        username: "testuser",
+        preferredUsername: "testuser",
+        password: "hashed_password",
+        email: "test@example.com",
         followers: [],
         following: [],
         createdAt: new Date(),
@@ -295,25 +321,27 @@ describe('AuthRepository', () => {
         .mockResolvedValueOnce(null) // First call with _id returns null
         .mockResolvedValueOnce(mockUser); // Second call with id returns user
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
 
-      const result = await authRepository.findById('user123');
+      const result = await authRepository.findById("user123");
 
-      expect(mockCollection.findOne).toHaveBeenCalledWith({ _id: 'user123' });
-      expect(mockCollection.findOne).toHaveBeenCalledWith({ id: 'user123' });
+      expect(mockCollection.findOne).toHaveBeenCalledWith({ _id: "user123" });
+      expect(mockCollection.findOne).toHaveBeenCalledWith({ id: "user123" });
       expect(result).toEqual(mockUser);
 
       consoleSpy.mockRestore();
     });
 
-    it('should handle ActivityPub ID format', async () => {
+    it("should handle ActivityPub ID format", async () => {
       const mockUser: DbUser = {
-        _id: 'user123',
-        id: 'https://example.com/users/testuser',
-        username: 'testuser',
-        preferredUsername: 'testuser',
-        password: 'hashed_password',
-        email: 'test@example.com',
+        _id: "user123",
+        id: "https://example.com/users/testuser",
+        username: "testuser",
+        preferredUsername: "testuser",
+        password: "hashed_password",
+        email: "test@example.com",
         followers: [],
         following: [],
         createdAt: new Date(),
@@ -325,27 +353,39 @@ describe('AuthRepository', () => {
         .mockResolvedValueOnce(null) // Second call with id returns null
         .mockResolvedValueOnce(mockUser); // Third call with AP ID returns user
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
 
-      const result = await authRepository.findById('https://example.com/users/testuser');
+      const result = await authRepository.findById(
+        "https://example.com/users/testuser"
+      );
 
-      expect(mockCollection.findOne).toHaveBeenCalledWith({ _id: 'https://example.com/users/testuser' });
-      expect(mockCollection.findOne).toHaveBeenCalledWith({ id: 'https://example.com/users/testuser' });
+      expect(mockCollection.findOne).toHaveBeenCalledWith({
+        _id: "https://example.com/users/testuser",
+      });
+      expect(mockCollection.findOne).toHaveBeenCalledWith({
+        id: "https://example.com/users/testuser",
+      });
       expect(result).toEqual(mockUser);
-      expect(consoleSpy).toHaveBeenCalledWith('[AuthRepository] Looking up by AP id');
-      expect(consoleSpy).toHaveBeenCalledWith('[AuthRepository] Found by AP id');
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "[AuthRepository] Looking up by AP id"
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "[AuthRepository] Found by AP id"
+      );
 
       consoleSpy.mockRestore();
     });
 
-    it('should try string equality on _id as fallback', async () => {
+    it("should try string equality on _id as fallback", async () => {
       const mockUser: DbUser = {
-        _id: 'user123',
-        id: 'user123',
-        username: 'testuser',
-        preferredUsername: 'testuser',
-        password: 'hashed_password',
-        email: 'test@example.com',
+        _id: "user123",
+        id: "user123",
+        username: "testuser",
+        preferredUsername: "testuser",
+        password: "hashed_password",
+        email: "test@example.com",
         followers: [],
         following: [],
         createdAt: new Date(),
@@ -358,62 +398,76 @@ describe('AuthRepository', () => {
 
       mockCollection.findOne.mockResolvedValue(mockUser);
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
 
-      const result = await authRepository.findById('user123');
+      const result = await authRepository.findById("user123");
 
       expect(mockCollection.findOne).toHaveBeenCalledWith({
-        $expr: { $eq: [{ $toString: '$_id' }, 'user123'] },
+        $expr: { $eq: [{ $toString: "$_id" }, "user123"] },
       });
-      expect(consoleSpy).toHaveBeenCalledWith('[AuthRepository] Found with string equality on _id');
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "[AuthRepository] Found with string equality on _id"
+      );
 
       consoleSpy.mockRestore();
     });
 
-    it('should return null when all lookup attempts fail', async () => {
+    it("should return null when all lookup attempts fail", async () => {
       mockCollection.findOne.mockResolvedValue(null);
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
 
-      const result = await authRepository.findById('nonexistent');
+      const result = await authRepository.findById("nonexistent");
 
       expect(result).toBeNull();
-      expect(consoleSpy).toHaveBeenCalledWith('[AuthRepository] Failed all lookup attempts');
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "[AuthRepository] Failed all lookup attempts"
+      );
 
       consoleSpy.mockRestore();
     });
 
-    it('should handle database errors', async () => {
-      mockCollection.findOne.mockRejectedValue(new Error('Database error'));
+    it("should handle database errors", async () => {
+      mockCollection.findOne.mockRejectedValue(new Error("Database error"));
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
 
-      await expect(authRepository.findById('user123')).rejects.toThrow('Database error');
+      await expect(authRepository.findById("user123")).rejects.toThrow(
+        "Database error"
+      );
 
       consoleSpy.mockRestore();
     });
 
-    it('should handle empty id', async () => {
+    it("should handle empty id", async () => {
       mockCollection.findOne.mockResolvedValue(null);
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
 
-      const result = await authRepository.findById('');
+      const result = await authRepository.findById("");
 
-      expect(mockCollection.findOne).toHaveBeenCalledWith({ _id: '' });
+      expect(mockCollection.findOne).toHaveBeenCalledWith({ _id: "" });
       expect(result).toBeNull();
 
       consoleSpy.mockRestore();
     });
 
-    it('should handle special characters in id', async () => {
+    it("should handle special characters in id", async () => {
       const mockUser: DbUser = {
-        _id: 'user@123',
-        id: 'user@123',
-        username: 'testuser',
-        preferredUsername: 'testuser',
-        password: 'hashed_password',
-        email: 'test@example.com',
+        _id: "user@123",
+        id: "user@123",
+        username: "testuser",
+        preferredUsername: "testuser",
+        password: "hashed_password",
+        email: "test@example.com",
         followers: [],
         following: [],
         createdAt: new Date(),
@@ -422,56 +476,68 @@ describe('AuthRepository', () => {
 
       mockCollection.findOne.mockResolvedValue(mockUser);
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
 
-      const result = await authRepository.findById('user@123');
+      const result = await authRepository.findById("user@123");
 
-      expect(mockCollection.findOne).toHaveBeenCalledWith({ _id: 'user@123' });
+      expect(mockCollection.findOne).toHaveBeenCalledWith({ _id: "user@123" });
       expect(result).toEqual(mockUser);
 
       consoleSpy.mockRestore();
     });
   });
 
-  describe('Error Handling', () => {
-    it('should handle connection errors in findByUsername', async () => {
-      mockCollection.findOne.mockRejectedValue(new Error('Connection refused'));
+  describe("Error Handling", () => {
+    it("should handle connection errors in findByUsername", async () => {
+      mockCollection.findOne.mockRejectedValue(new Error("Connection refused"));
 
-      await expect(authRepository.findByUsername('testuser')).rejects.toThrow('Connection refused');
+      await expect(authRepository.findByUsername("testuser")).rejects.toThrow(
+        "Connection refused"
+      );
     });
 
-    it('should handle connection errors in findByEmail', async () => {
-      mockCollection.findOne.mockRejectedValue(new Error('Connection timeout'));
+    it("should handle connection errors in findByEmail", async () => {
+      mockCollection.findOne.mockRejectedValue(new Error("Connection timeout"));
 
-      await expect(authRepository.findByEmail('test@example.com')).rejects.toThrow('Connection timeout');
+      await expect(
+        authRepository.findByEmail("test@example.com")
+      ).rejects.toThrow("Connection timeout");
     });
 
-    it('should handle timeout errors in findById', async () => {
-      mockCollection.findOne.mockRejectedValue(new Error('Query timeout'));
+    it("should handle timeout errors in findById", async () => {
+      mockCollection.findOne.mockRejectedValue(new Error("Query timeout"));
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
 
-      await expect(authRepository.findById('user123')).rejects.toThrow('Query timeout');
+      await expect(authRepository.findById("user123")).rejects.toThrow(
+        "Query timeout"
+      );
 
       consoleSpy.mockRestore();
     });
 
-    it('should handle malformed query errors', async () => {
-      mockCollection.findOne.mockRejectedValue(new Error('Invalid query'));
+    it("should handle malformed query errors", async () => {
+      mockCollection.findOne.mockRejectedValue(new Error("Invalid query"));
 
-      await expect(authRepository.findByUsername('testuser')).rejects.toThrow('Invalid query');
+      await expect(authRepository.findByUsername("testuser")).rejects.toThrow(
+        "Invalid query"
+      );
     });
   });
 
-  describe('Integration Scenarios', () => {
-    it('should handle complete user lookup workflow', async () => {
+  describe("Integration Scenarios", () => {
+    it("should handle complete user lookup workflow", async () => {
       const mockUser: DbUser = {
-        _id: 'user123',
-        id: 'user123',
-        username: 'testuser',
-        preferredUsername: 'testuser',
-        password: 'hashed_password',
-        email: 'test@example.com',
+        _id: "user123",
+        id: "user123",
+        username: "testuser",
+        preferredUsername: "testuser",
+        password: "hashed_password",
+        email: "test@example.com",
         followers: [],
         following: [],
         createdAt: new Date(),
@@ -480,12 +546,14 @@ describe('AuthRepository', () => {
 
       mockCollection.findOne.mockResolvedValue(mockUser);
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
 
       // Test different lookup methods
-      const userByUsername = await authRepository.findByUsername('testuser');
-      const userByEmail = await authRepository.findByEmail('test@example.com');
-      const userById = await authRepository.findById('user123');
+      const userByUsername = await authRepository.findByUsername("testuser");
+      const userByEmail = await authRepository.findByEmail("test@example.com");
+      const userById = await authRepository.findById("user123");
 
       expect(userByUsername).toEqual(mockUser);
       expect(userByEmail).toEqual(mockUser);
@@ -494,14 +562,18 @@ describe('AuthRepository', () => {
       consoleSpy.mockRestore();
     });
 
-    it('should handle user not found across all methods', async () => {
+    it("should handle user not found across all methods", async () => {
       mockCollection.findOne.mockResolvedValue(null);
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
 
-      const userByUsername = await authRepository.findByUsername('nonexistent');
-      const userByEmail = await authRepository.findByEmail('nonexistent@example.com');
-      const userById = await authRepository.findById('nonexistent');
+      const userByUsername = await authRepository.findByUsername("nonexistent");
+      const userByEmail = await authRepository.findByEmail(
+        "nonexistent@example.com"
+      );
+      const userById = await authRepository.findById("nonexistent");
 
       expect(userByUsername).toBeNull();
       expect(userByEmail).toBeNull();
@@ -510,17 +582,17 @@ describe('AuthRepository', () => {
       consoleSpy.mockRestore();
     });
 
-    it('should handle partial user data', async () => {
+    it("should handle partial user data", async () => {
       const partialUser: Partial<DbUser> = {
-        _id: 'user123',
-        username: 'testuser',
-        preferredUsername: 'testuser',
+        _id: "user123",
+        username: "testuser",
+        preferredUsername: "testuser",
         // Missing some fields
       };
 
       mockCollection.findOne.mockResolvedValue(partialUser);
 
-      const result = await authRepository.findByUsername('testuser');
+      const result = await authRepository.findByUsername("testuser");
 
       expect(result).toEqual(partialUser);
     });
