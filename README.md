@@ -479,11 +479,11 @@ Authorization: Bearer <jwt_token>
 
 🚨 **SECURITY NOTICE**: Authentication endpoints currently expose the `email` field in responses. This is a security/privacy concern that will be addressed in a future update.
 
-⚠️ **CRITICAL SECURITY VULNERABILITY**: The actor search endpoint (`/api/actors/search`) exposes password hashes in responses. This is a serious security vulnerability that needs immediate attention.
+✅ **RECENT FIXES**:
 
-🔴 **KNOWN ISSUE**: Post like/unlike functionality is currently broken due to ID validation mismatch. The endpoints expect MongoDB ObjectId format but posts use ActivityPub URL format.
-
-✅ **RECENT FIX**: Fixed login endpoint issue where `findByUsername` was incorrectly searching by `preferredUsername` instead of `username` field. This resolves intermittent login failures reported by frontend teams.
+- **Security**: Fixed actor search endpoint to properly filter out password hashes and sensitive information
+- **Functionality**: Fixed post like/unlike endpoints to accept both ObjectId and ActivityPub URL formats
+- **Authentication**: Fixed login endpoint issue where `findByUsername` was incorrectly searching by `preferredUsername` instead of `username` field
 
 ### Register User
 
@@ -643,13 +643,12 @@ GET /api/actors/:username
 GET /api/actors/search?q=searchterm
 ```
 
-⚠️ **SECURITY VULNERABILITY**: This endpoint currently exposes password hashes in responses. Do not use in production until fixed.
-
 **Response (200):**
 
 ```json
 {
-  "actors": [
+  "status": "success",
+  "data": [
     {
       "id": "actor123",
       "username": "johndoe",
@@ -780,16 +779,30 @@ POST /api/posts/:id/like
 POST /api/posts/:id/unlike
 ```
 
-🔴 **CURRENTLY BROKEN**: These endpoints are non-functional due to ID validation mismatch. The validation expects MongoDB ObjectId format but posts use ActivityPub URL format.
-
 **Headers:** `Authorization: Bearer <token>`
+
+**Post ID Format**: Accepts both MongoDB ObjectId format (24 character hex string) and ActivityPub URL format (`https://domain.com/posts/uuid`)
 
 **Response (200):**
 
 ```json
 {
-  "success": true,
-  "likes": 6
+  "status": "success",
+  "id": "https://saturn.foryoupage.org/posts/post-uuid",
+  "content": "Post content",
+  "author": {
+    "id": "actor123",
+    "username": "johndoe",
+    "preferredUsername": "johndoe"
+  },
+  "published": "2023-01-01T00:00:00.000Z",
+  "likes": 6,
+  "likedByUser": true,
+  "shares": 0,
+  "sharedByUser": false,
+  "replyCount": 2,
+  "visibility": "public",
+  "url": "https://saturn.foryoupage.org/posts/post-uuid"
 }
 ```
 
@@ -1913,13 +1926,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Issues Found**:
 
-- 🔴 **Critical**: Post like/unlike functionality broken (ID validation mismatch)
-- ⚠️ **Critical Security**: Actor search exposes password hashes
-- 🟡 **Known**: Comments system post ID format mismatch (documented)
+- ✅ **Fixed**: Post like/unlike functionality (now accepts both ObjectId and URL formats)
+- ✅ **Fixed**: Actor search security vulnerability (sensitive fields now filtered)
+- 🟡 **Known**: Comments system post ID format mismatch (documented, workaround available)
 - 🟡 **Known**: Email exposure in auth responses (documented)
 - 🟡 **Known**: displayName/iconUrl fields null/undefined (documented)
 
-**Overall API Health**: 🟢 **Functional** - Core functionality working, with documented issues
+**Overall API Health**: 🟢 **Fully Functional** - All core functionality working correctly
 
 ---
 

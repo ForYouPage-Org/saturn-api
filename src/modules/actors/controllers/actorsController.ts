@@ -57,7 +57,19 @@ export class ActorsController {
     const { q } = req.query;
     const searchQuery = (q as string) || "";
     const actors = await this.actorService.searchActors(searchQuery);
-    return res.json(actors);
+
+    // Filter out sensitive information from search results
+    const safeActors = actors.map((actor) => {
+      const {
+        password: _password,
+        email: _email,
+        privateKey: _privateKey,
+        ...actorWithoutSensitiveInfo
+      } = actor;
+      return actorWithoutSensitiveInfo;
+    });
+
+    return res.json({ status: "success", data: safeActors });
   }
 
   /**

@@ -7,12 +7,35 @@ import {
 } from '../../shared/schemas/common.schemas';
 
 /**
+ * Schema for post ID that accepts both ObjectId and ActivityPub URL formats
+ */
+export const postIdSchema = z.string().refine(
+  (id) => {
+    // Accept MongoDB ObjectId format (24 character hex string)
+    if (/^[0-9a-fA-F]{24}$/.test(id)) {
+      return true;
+    }
+    // Accept ActivityPub URL format
+    if (id.startsWith('http://') || id.startsWith('https://')) {
+      try {
+        new URL(id);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  },
+  {
+    message: 'Invalid post ID format. Must be either a valid ObjectId or a valid URL.',
+  }
+);
+
+/**
  * Schema for post ID URL parameter
  */
 export const postIdParamSchema = z.object({
-  id: objectIdSchema.refine(val => val, {
-    message: 'Invalid post ID format',
-  }),
+  id: postIdSchema,
 });
 
 /**
