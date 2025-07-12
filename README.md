@@ -890,10 +890,10 @@ We have created several test accounts for comprehensive API testing:
 
 | Username         | Email                  | Password              | Purpose                 | JWT Token (Valid 24h)                                                                                                                                                                                              |
 | ---------------- | ---------------------- | --------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `testuser`       | `testuser@example.com` | `SecurePassword123!`  | General testing         | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NzJiOTcwODJiOWUxODliZjk4MjgwNCIsInVzZXJuYW1lIjoidGVzdHVzZXIiLCJpYXQiOjE3NTIzNDkyMTUsImV4cCI6MTc1MjQzNTYxNX0.jw5Hr85-hEMXaIXdClwpJ-F5ifZLm5xJGBVuzN6k_vk`         |
-| `adminuser`      | `admin@example.com`    | `AdminPassword123!`   | Admin functionality     | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NzJiOTc3ODJiOWUxODliZjk4MjgwNSIsInVzZXJuYW1lIjoiYWRtaW51c2VyIiwiaWF0IjoxNzUyMzQ5MDQ3LCJleHAiOjE3NTI0MzU0NDd9.354nYa15gc4cbEx2VvjwX_xVpuibmT3qQjZz1_UKkII`        |
-| `contentcreator` | `creator@example.com`  | `CreatorPassword123!` | Content & media testing | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NzJiOTdmODJiOWUxODliZjk4MjgwNiIsInVzZXJuYW1lIjoiY29udGVudGNyZWF0b3IiLCJpYXQiOjE3NTIzNDkwNTUsImV4cCI6MTc1MjQzNTQ1NX0.4LMirX2sutzmOvbgsoVo5hPPDHkSLUlgOyylbVE6qZ4` |
-| `socialuser`     | `social@example.com`   | `SocialPassword123!`  | Social interactions     | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NzJiYTE5ODJiOWUxODliZjk4MjgwOSIsInVzZXJuYW1lIjoic29jaWFsdXNlciIsImlhdCI6MTc1MjM0OTIwOSwiZXhwIjoxNzUyNDM1NjA5fQ.87Qi7G2_Pwi5FS3lKceyToLatUpQyMx2noaQkdZX-QM`      |
+| `testuser`       | `testuser@example.com` | `SecurePassword123!`  | General testing         | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NzJiOTcwODJiOWUxODliZjk4MjgwNCIsInVzZXJuYW1lIjoidGVzdHVzZXIiLCJpYXQiOjE3NTIzNTAwMDUsImV4cCI6MTc1MjQzNjQwNX0.Q6Rr56qcCVGdLYUWqdDeKa8d-LYmBzNZbN9Fykdnz9Q`         |
+| `adminuser`      | `admin@example.com`    | `AdminPassword123!`   | Admin functionality     | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NzJiOTc3ODJiOWUxODliZjk4MjgwNSIsInVzZXJuYW1lIjoiYWRtaW51c2VyIiwiaWF0IjoxNzUyMzUwMDEzLCJleHAiOjE3NTI0MzY0MTN9.IGD1EzGrk77dpHKp4V5FWgBO2iUyXmY3RKpl2eO9atA`        |
+| `contentcreator` | `creator@example.com`  | `CreatorPassword123!` | Content & media testing | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NzJiOTdmODJiOWUxODliZjk4MjgwNiIsInVzZXJuYW1lIjoiY29udGVudGNyZWF0b3IiLCJpYXQiOjE3NTIzNTAwMjEsImV4cCI6MTc1MjQzNjQyMX0.FlZ05y6sBookbVTlIr5cNFPphtzbLO9E3xUHGYe36NI` |
+| `socialuser`     | `social@example.com`   | `SocialPassword123!`  | Social interactions     | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NzJiYTE5ODJiOWUxODliZjk4MjgwOSIsInVzZXJuYW1lIjoic29jaWFsdXNlciIsImlhdCI6MTc1MjM1MDAyNywiZXhwIjoxNzUyNDM2NDI3fQ.29wVxMc0iaUzgA7QrgRUoH_Xn3eCumPY8FjrqdTMHk4`      |
 
 **Note:** Tokens expire after 24 hours. Use the login endpoint to get fresh tokens.
 
@@ -958,7 +958,7 @@ curl https://saturn.foryoupage.org/users/testuser \
 **Rate Limiting:**
 The API implements environment-specific rate limiting. See the comprehensive rate limiting section above for details.
 
-**⚠️ Important**: The production server currently uses the old restrictive rate limits. After the next deployment, development/testing will be much more permissive.
+**✅ Updated**: The production server now uses the improved rate limiting system with much more permissive limits for development/testing!
 
 #### Testing Scenarios
 
