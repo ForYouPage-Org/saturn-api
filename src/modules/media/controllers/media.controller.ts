@@ -1,10 +1,11 @@
 // Media controller implementation
-import type { Request, Response } from 'express';
-import type { MediaService } from '../services/media.service';
-import { UploadService } from '../services/upload.service';
-import path from 'path';
-import config from '../../../config';
-import { ObjectId } from 'mongodb';
+import type { Request, Response, NextFunction } from "express";
+import type { MediaService } from "../services/media.service";
+import { UploadService } from "../services/upload.service";
+import path from "path";
+import config from "../../../config";
+import { ObjectId } from "mongodb";
+import { AppError, ErrorType } from "../../../utils/errors";
 
 export class MediaController {
   private service: MediaService;
@@ -16,30 +17,35 @@ export class MediaController {
   }
 
   // Handler for uploading media
-  async uploadMedia(req: Request, res: Response): Promise<void> {
+  async uploadMedia(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       // Configure multer middleware for media uploads
       const upload = this.uploadService.configureMediaUploadMiddleware({
         fileSizeLimitMB: 10,
         uploadDir: config.uploads.tempDir,
-        allowedTypes: ['image/', 'video/', 'audio/'],
+        allowedTypes: ["image/", "video/", "audio/"],
       });
 
       // Use multer to handle the file upload
-      upload.single('file')(req as any, res as any, async err => {
+      upload.single("file")(req as any, res as any, async (err) => {
         if (err) {
-          res.status(400).json({ error: err.message });
-          return;
+          return next(new AppError(err.message, 400, ErrorType.VALIDATION));
         }
 
         if (!req.file) {
-          res.status(400).json({ error: 'No file provided' });
-          return;
+          return next(
+            new AppError("No file provided", 400, ErrorType.VALIDATION)
+          );
         }
 
         if (!req.user?.id) {
-          res.status(401).json({ error: 'User not authenticated' });
-          return;
+          return next(
+            new AppError("User not authenticated", 401, ErrorType.UNAUTHORIZED)
+          );
         }
 
         try {
@@ -70,31 +76,38 @@ export class MediaController {
             size: media.size,
           });
         } catch (error) {
-          console.error('Error saving media:', error);
-          res.status(500).json({ error: 'Failed to save media' });
+          console.error("Error saving media:", error);
+          return next(
+            new AppError("Failed to save media", 500, ErrorType.SERVER_ERROR)
+          );
         }
       });
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.error('Error uploading media:', error.message, {
+        console.error("Error uploading media:", error.message, {
           stack: error.stack,
         });
       } else {
-        console.error('Unknown error uploading media:', error);
+        console.error("Unknown error uploading media:", error);
       }
-      res.status(500).json({ error: 'Failed to upload media' });
+      return next(
+        new AppError("Failed to upload media", 500, ErrorType.SERVER_ERROR)
+      );
     }
   }
 
   // Handler for retrieving media
-  async getMedia(req: Request, res: Response): Promise<void> {
+  async getMedia(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const { id } = req.params;
       const media = await this.service.getMediaById(id);
 
       if (!media) {
-        res.status(404).json({ error: 'Media not found' });
-        return;
+        return next(new AppError("Media not found", 404, ErrorType.NOT_FOUND));
       }
 
       res.json({
@@ -106,49 +119,62 @@ export class MediaController {
       });
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.error('Error retrieving media:', error.message, {
+        console.error("Error retrieving media:", error.message, {
           stack: error.stack,
         });
       } else {
-        console.error('Unknown error retrieving media:', error);
+        console.error("Unknown error retrieving media:", error);
       }
-      res.status(500).json({ error: 'Failed to retrieve media' });
+      return next(
+        new AppError("Failed to retrieve media", 500, ErrorType.SERVER_ERROR)
+      );
     }
   }
 
   // Handler for deleting media
-  async deleteMedia(req: Request, res: Response): Promise<void> {
+  async deleteMedia(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const { id } = req.params;
 
       if (!req.user?.id) {
-        res.status(401).json({ error: 'User not authenticated' });
-        return;
+        return next(
+          new AppError("User not authenticated", 401, ErrorType.UNAUTHORIZED)
+        );
       }
 
       const media = await this.service.getMediaById(id);
       if (!media) {
-        res.status(404).json({ error: 'Media not found' });
-        return;
+        return next(new AppError("Media not found", 404, ErrorType.NOT_FOUND));
       }
 
       // Check if user owns the media
       if (media.userId !== req.user.id) {
-        res.status(403).json({ error: 'Not authorized to delete this media' });
-        return;
+        return next(
+          new AppError(
+            "Not authorized to delete this media",
+            403,
+            ErrorType.FORBIDDEN
+          )
+        );
       }
 
       await this.service.deleteMedia(id);
       res.status(204).send();
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.error('Error deleting media:', error.message, {
+        console.error("Error deleting media:", error.message, {
           stack: error.stack,
         });
       } else {
-        console.error('Unknown error deleting media:', error);
+        console.error("Unknown error deleting media:", error);
       }
-      res.status(500).json({ error: 'Failed to delete media' });
+      return next(
+        new AppError("Failed to delete media", 500, ErrorType.SERVER_ERROR)
+      );
     }
   }
 }

@@ -1,7 +1,7 @@
-import type { Request, Response, NextFunction } from 'express';
-import type { CommentService } from '../services/comment.service';
-import type { CreateCommentDto as CommentModelDto } from '../models/comment';
-import { AppError, ErrorType } from '@/utils/errors';
+import type { Request, Response, NextFunction } from "express";
+import type { CommentService } from "../services/comment.service";
+import type { CreateCommentDto as CommentModelDto } from "../models/comment";
+import { AppError, ErrorType } from "@/utils/errors";
 
 // Define DTO locally if needed for input shape, but use Model DTO for service call
 interface CreateCommentInput {
@@ -22,17 +22,19 @@ export class CommentsController {
       const actorId = req.user?.id;
 
       if (!actorId) {
-        return res.status(401).json({ error: 'Authentication required' });
+        return next(
+          new AppError("Authentication required", 401, ErrorType.UNAUTHORIZED)
+        );
       }
       if (!content) {
         throw new AppError(
-          'Comment content is required',
+          "Comment content is required",
           400,
           ErrorType.BAD_REQUEST
         );
       }
       if (!postId) {
-        throw new AppError('Post ID is required', 400, ErrorType.BAD_REQUEST);
+        throw new AppError("Post ID is required", 400, ErrorType.BAD_REQUEST);
       }
 
       // Pass the full CreateCommentDto required by the service method's type signature
@@ -52,7 +54,11 @@ export class CommentsController {
     }
   }
 
-  async getComments(req: Request, res: Response): Promise<Response> {
+  async getComments(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> {
     const { postId } = req.params;
 
     try {
@@ -69,13 +75,21 @@ export class CommentsController {
       if (error instanceof AppError) {
         return res.status(error.statusCode).json({ error: error.message });
       }
-      return res.status(500).json({ error: 'Failed to retrieve comments' });
+      return next(
+        new AppError("Failed to retrieve comments", 500, ErrorType.SERVER_ERROR)
+      );
     }
   }
 
-  async deleteComment(req: Request, res: Response): Promise<Response> {
+  async deleteComment(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> {
     if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return next(
+        new AppError("Authentication required", 401, ErrorType.UNAUTHORIZED)
+      );
     }
     const { commentId } = req.params;
 
@@ -87,14 +101,16 @@ export class CommentsController {
       if (deleted) {
         return res
           .status(200)
-          .json({ message: 'Comment deleted successfully' });
+          .json({ message: "Comment deleted successfully" });
       }
-      return res.status(404).json({ error: 'Comment not found' });
+      return next(new AppError("Comment not found", 404, ErrorType.NOT_FOUND));
     } catch (error) {
       if (error instanceof AppError) {
         return res.status(error.statusCode).json({ error: error.message });
       }
-      return res.status(500).json({ error: 'Failed to delete comment' });
+      return next(
+        new AppError("Failed to delete comment", 500, ErrorType.SERVER_ERROR)
+      );
     }
   }
 }

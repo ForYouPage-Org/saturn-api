@@ -10,6 +10,7 @@ import { NotificationsController } from '../controllers/notifications.controller
 import { authenticate } from '../../../middleware/auth';
 import type { ServiceContainer } from '../../../utils/container';
 import { wrapAsync } from '../../../utils/routeHandler';
+import { AppError, ErrorType } from '../../../utils/errors';
 import {
   validateRequestQuery,
   validateRequestBody,
@@ -65,7 +66,7 @@ export function configureNotificationRoutes(
     // Check for authorization header first
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Authorization header required' });
+      return next(new AppError('Authorization header required', 401, ErrorType.UNAUTHORIZED));
     }
 
     // If auth header exists, proceed to validation

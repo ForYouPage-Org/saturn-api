@@ -39,7 +39,6 @@ const createErrorResponse = (message: string) => ({
   status: "error",
   type: ErrorType.RATE_LIMIT,
   error: message,
-  message: message, // Include both for backward compatibility
 });
 
 // Default rate limiter for general API endpoints

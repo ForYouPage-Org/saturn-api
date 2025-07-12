@@ -1,35 +1,38 @@
-import type { Request, Response, Router, NextFunction } from 'express';
-import express from 'express';
-import { WebFingerController } from '../controllers/webfingerController';
-import type { ServiceContainer } from '../../../utils/container';
+import type { Request, Response, NextFunction, Router } from "express";
+import express from "express";
+import { WebFingerController } from "../controllers/webfingerController";
+import type { ServiceContainer } from "../../../utils/container";
+import { wrapAsync } from "../../../utils/routeHandler";
 
 /**
- * Configure WebFinger routes with the controller
+ * Configure WebFinger routes for actor discovery
  */
-export default function configureWebFingerRoutes(
+export function configureWebFingerRoutes(
   serviceContainer: ServiceContainer
 ): Router {
   const router = express.Router();
-  const { actorService, webfingerService } = serviceContainer;
-  const domain = process.env.DOMAIN || 'localhost:4000';
+  const { actorService, webfingerService, domain } = serviceContainer;
 
-  // Create controller with injected dependencies
+  // Create controller with injected services
   const webFingerController = new WebFingerController(
     actorService,
     webfingerService,
     domain
   );
 
-  // WebFinger endpoint for actor discovery
+  // WebFinger resource endpoint
   router.get(
-    '/.well-known/webfinger',
-    (req: Request, res: Response, next: NextFunction) => {
-      // Use type assertion to satisfy the controller's type requirement
-      webFingerController
-        .getResource(req as Request & { services: ServiceContainer }, res)
-        .catch(next);
-    }
+    "/.well-known/webfinger",
+    wrapAsync(async (req: Request, res: Response, next: NextFunction) => {
+      return webFingerController.getResource(
+        req as Request & { services: ServiceContainer },
+        res,
+        next
+      );
+    })
   );
 
   return router;
 }
+
+export default configureWebFingerRoutes;

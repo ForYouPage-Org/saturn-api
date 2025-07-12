@@ -10,6 +10,14 @@ import { createServiceContainer } from "./utils/container";
 import { serviceMiddleware } from "./middleware/serviceMiddleware";
 import { compatibilityMiddleware } from "./middleware/compatibilityMiddleware";
 import { defaultRateLimiter } from "./middleware/rateLimiter";
+import {
+  responseValidationMiddleware,
+  responseFormatMonitoring,
+} from "./middleware/responseValidation";
+import {
+  runtimeDtoValidation,
+  dtoValidationPerformanceMonitoring,
+} from "./middleware/dtoValidation";
 import { initPlugins } from "./plugins";
 import config from "./config";
 import healthRouter from "./routes/health";
@@ -111,6 +119,16 @@ export async function startServer(): Promise<{
     // Apply middlewares for services and backwards compatibility
     app.use(serviceMiddleware(services));
     app.use(compatibilityMiddleware as RequestHandler);
+
+    // Enterprise-grade response validation middleware
+    app.use(responseValidationMiddleware);
+    app.use(responseFormatMonitoring);
+    logger.info("Response validation middleware enabled");
+
+    // Runtime DTO validation middleware
+    app.use(runtimeDtoValidation);
+    app.use(dtoValidationPerformanceMonitoring);
+    logger.info("DTO validation middleware enabled");
 
     // Health check routes (should be early in the middleware stack)
     app.use("/", healthRouter);

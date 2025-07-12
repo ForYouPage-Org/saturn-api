@@ -1,4 +1,4 @@
-import type { ObjectId } from 'mongodb';
+import type { ObjectId } from "mongodb";
 
 /**
  * Comment interface
@@ -31,7 +31,8 @@ export interface FormattedComment extends Comment {
   author: {
     id: string;
     username: string;
+    preferredUsername: string;
     displayName?: string;
-    avatarUrl?: string;
+    iconUrl?: string;
   };
 }

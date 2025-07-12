@@ -1,18 +1,18 @@
-import type { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import type { DbUser } from '../modules/auth/models/user';
-import type { AuthService } from '../modules/auth/services/auth.service';
-import type { Db } from 'mongodb';
-import { ObjectId as _ObjectId } from 'mongodb';
-import { AppError, ErrorType } from '../utils/errors';
-import logger from '../utils/logger';
+import type { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
+import type { DbUser } from "../modules/auth/models/user";
+import type { AuthService } from "../modules/auth/services/auth.service";
+import type { Db } from "mongodb";
+import { ObjectId as _ObjectId } from "mongodb";
+import { AppError, ErrorType } from "../utils/errors";
+import logger from "../utils/logger";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // Helper function to generate tokens - still used by auth service
 export const generateToken = (user: DbUser): string => {
   if (!JWT_SECRET) {
-    throw new Error('JWT_SECRET is not defined');
+    throw new Error("JWT_SECRET is not defined");
   }
   return jwt.sign(
     {
@@ -21,8 +21,8 @@ export const generateToken = (user: DbUser): string => {
     },
     JWT_SECRET,
     {
-      expiresIn: '7d',
-      algorithm: 'HS256',
+      expiresIn: "7d",
+      algorithm: "HS256",
     }
   );
 };
@@ -45,33 +45,45 @@ export const auth = async (
       method: req.method,
       ip: req.ip,
     },
-    'WARNING: Using deprecated auth() middleware. Please migrate to authenticate().'
+    "WARNING: Using deprecated auth() middleware. Please migrate to authenticate()."
   );
 
   try {
     // Get token from Authorization header
     const authHeader = req.headers.authorization;
 
-    if (!authHeader?.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Authorization header required' });
+    if (!authHeader?.startsWith("Bearer ")) {
+      return next(
+        new AppError(
+          "Authorization header required",
+          401,
+          ErrorType.UNAUTHORIZED
+        )
+      );
     }
 
-    const token = authHeader.split(' ')[1];
+    const token = authHeader.split(" ")[1];
 
     if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
+      return next(
+        new AppError("No token provided", 401, ErrorType.UNAUTHORIZED)
+      );
     }
 
     if (!JWT_SECRET) {
-      logger.error('JWT_SECRET environment variable is not defined');
-      return res
-        .status(500)
-        .json({ error: 'Internal server configuration error' });
+      logger.error("JWT_SECRET environment variable is not defined");
+      return next(
+        new AppError(
+          "Internal server configuration error",
+          500,
+          ErrorType.SERVER_ERROR
+        )
+      );
     }
 
     // Verify token
     const decoded = jwt.verify(token, JWT_SECRET, {
-      algorithms: ['HS256'],
+      algorithms: ["HS256"],
     }) as {
       id: string;
       username: string;
@@ -81,19 +93,23 @@ export const auth = async (
     const db = req.app.locals.db as Db;
 
     if (!db) {
-      logger.error('Database not found in app.locals');
-      return res
-        .status(500)
-        .json({ error: 'Internal server configuration error' });
+      logger.error("Database not found in app.locals");
+      return next(
+        new AppError(
+          "Internal server configuration error",
+          500,
+          ErrorType.SERVER_ERROR
+        )
+      );
     }
 
     // Find user in database
-    const user = await db.collection<DbUser>('actors').findOne({
+    const user = await db.collection<DbUser>("actors").findOne({
       $or: [{ _id: decoded.id }, { preferredUsername: decoded.username }],
     });
 
     if (!user) {
-      return res.status(401).json({ error: 'Invalid token' });
+      return next(new AppError("Invalid token", 401, ErrorType.UNAUTHORIZED));
     }
 
     // Add user to request object
@@ -101,8 +117,8 @@ export const auth = async (
 
     next();
   } catch (__error) {
-    logger.error({ err: __error }, 'Auth middleware error');
-    return res.status(401).json({ error: 'Invalid token' });
+    logger.error({ err: __error }, "Auth middleware error");
+    return next(new AppError("Invalid token", 401, ErrorType.UNAUTHORIZED));
   }
 };
 
@@ -117,7 +133,7 @@ export const authorize = (): ((
   };
 };
 
-declare module 'express' {
+declare module "express" {
   interface Request {
     user?: DbUser;
   }
@@ -141,30 +157,32 @@ export const authenticateToken = (
       method: req.method,
       ip: req.ip,
     },
-    'WARNING: Using deprecated authenticateToken() middleware. Please migrate to authenticate().'
+    "WARNING: Using deprecated authenticateToken() middleware. Please migrate to authenticate()."
   );
 
   const authHeader = req.headers.authorization;
-  const token = authHeader?.split(' ')[1];
+  const token = authHeader?.split(" ")[1];
 
   if (!token) {
-    return res.status(401).json({ message: 'No token provided' });
+    return next(new AppError("No token provided", 401, ErrorType.UNAUTHORIZED));
   }
 
   if (!JWT_SECRET) {
-    logger.error('JWT_SECRET environment variable is not defined');
-    return res.status(500).json({ message: 'Server configuration error' });
+    logger.error("JWT_SECRET environment variable is not defined");
+    return next(
+      new AppError("Server configuration error", 500, ErrorType.SERVER_ERROR)
+    );
   }
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET, {
-      algorithms: ['HS256'],
+      algorithms: ["HS256"],
     }) as DbUser;
     req.user = decoded;
     next();
   } catch (_error) {
-    logger.error({ err: _error }, 'Token verification failed');
-    return res.status(403).json({ message: 'Invalid token' });
+    logger.error({ err: _error }, "Token verification failed");
+    return next(new AppError("Invalid token", 403, ErrorType.FORBIDDEN));
   }
 };
 
@@ -194,29 +212,37 @@ export const authenticate = (
     try {
       const authHeader = req.headers.authorization;
 
-      if (!authHeader?.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Authorization header required' });
+      if (!authHeader?.startsWith("Bearer ")) {
+        return next(
+          new AppError(
+            "Authorization header required",
+            401,
+            ErrorType.UNAUTHORIZED
+          )
+        );
       }
 
-      const token = authHeader.split(' ')[1];
+      const token = authHeader.split(" ")[1];
 
       if (!token) {
-        return res.status(401).json({ error: 'No token provided' });
+        return next(
+          new AppError("No token provided", 401, ErrorType.UNAUTHORIZED)
+        );
       }
 
       const user = await authService.verifyToken(token);
       if (!user) {
-        return res.status(401).json({ error: 'Invalid token' });
+        return next(new AppError("Invalid token", 401, ErrorType.UNAUTHORIZED));
       }
 
       req.user = user;
       next();
     } catch (error) {
       if (error instanceof Error) {
-        logger.error({ err: error, path: req.path }, 'Authentication error');
+        logger.error({ err: error, path: req.path }, "Authentication error");
       }
       next(
-        new AppError('Authentication failed', 401, ErrorType.AUTHENTICATION)
+        new AppError("Authentication failed", 401, ErrorType.AUTHENTICATION)
       );
     }
   };
@@ -233,7 +259,9 @@ export const requireAuth = (
   next: NextFunction
 ): void | Response => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Authentication required' });
+    return next(
+      new AppError("Authentication required", 401, ErrorType.UNAUTHORIZED)
+    );
   }
   next();
 };

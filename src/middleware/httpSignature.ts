@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
 import { fetchRemoteActor } from '../utils/federation';
 
+import { AppError, ErrorType } from '../utils/errors';
 interface ParsedSignature {
   keyId: string;
   algorithm: string;
@@ -78,7 +79,7 @@ export async function verifyHttpSignature(
 
     const signatureHeader = req.headers.signature as string;
     if (!signatureHeader) {
-      res.status(401).json({ error: 'Missing signature header' });
+      next(new AppError('Missing signature header', 401, ErrorType.UNAUTHORIZED));
       return;
     }
 
@@ -87,7 +88,7 @@ export async function verifyHttpSignature(
 
     // Only support RSA-SHA256 for now
     if (parsedSig.algorithm !== 'rsa-sha256') {
-      res.status(400).json({ error: 'Unsupported signature algorithm' });
+      next(new AppError('Unsupported signature algorithm', 400, ErrorType.VALIDATION));
       return;
     }
 
@@ -103,7 +104,7 @@ export async function verifyHttpSignature(
         'Failed to fetch remote actor for signature verification:',
         error
       );
-      res.status(401).json({ error: 'Could not fetch actor public key' });
+      next(new AppError('Could not fetch actor public key', 401, ErrorType.UNAUTHORIZED));
       return;
     }
 
@@ -112,7 +113,7 @@ export async function verifyHttpSignature(
     if (remoteActor.publicKey?.publicKeyPem) {
       publicKeyPem = remoteActor.publicKey.publicKeyPem;
     } else {
-      res.status(401).json({ error: 'No public key found for actor' });
+      next(new AppError('No public key found for actor', 401, ErrorType.UNAUTHORIZED));
       return;
     }
 
@@ -130,7 +131,7 @@ export async function verifyHttpSignature(
     );
 
     if (!isValid) {
-      res.status(401).json({ error: 'Invalid signature' });
+      next(new AppError('Invalid signature', 401, ErrorType.UNAUTHORIZED));
       return;
     }
 
@@ -140,7 +141,7 @@ export async function verifyHttpSignature(
     next();
   } catch (error) {
     console.error('HTTP signature verification error:', error);
-    res.status(400).json({ error: 'Signature verification failed' });
+    next(new AppError('Signature verification failed', 400, ErrorType.VALIDATION));
   }
 }
 

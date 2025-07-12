@@ -1,9 +1,9 @@
-import type { Request, Response, Router, NextFunction } from 'express';
-import express from 'express';
-import { ActorsController } from '../controllers/actorsController';
-import { authenticate } from '../../../middleware/auth';
-import type { ServiceContainer } from '../../../utils/container';
-import { wrapAsync } from '../../../utils/routeHandler';
+import type { Request, Response, Router, NextFunction } from "express";
+import express from "express";
+import { ActorsController } from "../controllers/actorsController";
+import { authenticate } from "../../../middleware/auth";
+import type { ServiceContainer } from "../../../utils/container";
+import { wrapAsync } from "../../../utils/routeHandler";
 
 /**
  * Configure actor routes with the controller
@@ -17,11 +17,11 @@ export default function configureActorRoutes(
 
   if (!authService) {
     throw new Error(
-      'AuthService not found in service container during actor route setup'
+      "AuthService not found in service container during actor route setup"
     );
   }
 
-  const domain = process.env.DOMAIN || 'localhost:4000';
+  const domain = process.env.DOMAIN || "localhost:4000";
 
   // Create controller with injected dependencies
   const actorsController = new ActorsController(
@@ -39,20 +39,20 @@ export default function configureActorRoutes(
 
   // Search actors
   router.get(
-    '/search',
+    "/search",
     (req: Request, res: Response, next: NextFunction): void => {
       void actorsController.searchActors(req, res).catch(next);
     }
   );
 
   // Create new actor
-  router.post('/', (req: Request, res: Response, next: NextFunction): void => {
+  router.post("/", (req: Request, res: Response, next: NextFunction): void => {
     void actorsController.createActor(req, res, next);
   });
 
   // Get actor posts
   router.get(
-    '/:username/posts',
+    "/:username/posts",
     (req: Request, res: Response, next: NextFunction): void => {
       void actorsController.getActorPosts(req, res, next);
     }
@@ -60,29 +60,29 @@ export default function configureActorRoutes(
 
   // Get actor by username
   router.get(
-    '/:username',
-    (req: Request, res: Response, next: NextFunction): void => {
-      void actorsController.getActorByUsername(req, res).catch(next);
-    }
+    "/:username",
+    wrapAsync(async (req: Request, res: Response, next: NextFunction) => {
+      return actorsController.getActorByUsername(req, res, next);
+    })
   );
 
   // Update actor by username
   router.put(
-    '/username/:username',
+    "/username/:username",
     authenticate(authService),
     wrapAsync(actorsController.updateActorByUsername.bind(actorsController))
   );
 
   // Update actor
   router.put(
-    '/:id',
+    "/:id",
     authenticate(authService),
     wrapAsync(actorsController.updateActor.bind(actorsController))
   );
 
   // Delete actor
   router.delete(
-    '/:id',
+    "/:id",
     authenticate(authService),
     wrapAsync(actorsController.deleteActor.bind(actorsController))
   );

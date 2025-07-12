@@ -1,10 +1,10 @@
-import type { Request, Response, NextFunction } from 'express';
-import type { ActorService } from '../services/actorService';
-import type { UploadService } from '@/modules/media/services/upload.service';
-import type { PostService } from '@/modules/posts/services/postService';
-import { AppError, ErrorType } from '@/utils/errors';
-import { ObjectId } from 'mongodb';
-import type { Actor } from '../models/actor';
+import type { Request, Response, NextFunction } from "express";
+import type { ActorService } from "../services/actorService";
+import type { UploadService } from "@/modules/media/services/upload.service";
+import type { PostService } from "@/modules/posts/services/postService";
+import { AppError, ErrorType } from "@/utils/errors";
+import { ObjectId } from "mongodb";
+import type { Actor } from "../models/actor";
 
 // Define DTO for controller input
 interface CreateActorControllerDTO {
@@ -26,7 +26,7 @@ interface ActorProfileUpdate {
   displayName?: string;
   summary?: string;
   icon?: {
-    type: 'Image';
+    type: "Image";
     mediaType: string;
     url: string;
   };
@@ -55,7 +55,7 @@ export class ActorsController {
    */
   async searchActors(req: Request, res: Response): Promise<Response> {
     const { q } = req.query;
-    const searchQuery = (q as string) || '';
+    const searchQuery = (q as string) || "";
     const actors = await this.actorService.searchActors(searchQuery);
     return res.json(actors);
   }
@@ -76,7 +76,7 @@ export class ActorsController {
       // Add validation here using the DTO
       if (!actorData.username || !actorData.email || !actorData.password) {
         throw new AppError(
-          'Missing required fields (username, email, password)',
+          "Missing required fields (username, email, password)",
           400,
           ErrorType.BAD_REQUEST
         );
@@ -92,11 +92,15 @@ export class ActorsController {
   /**
    * Get actor by username
    */
-  async getActorByUsername(req: Request, res: Response): Promise<Response> {
+  async getActorByUsername(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> {
     const { username } = req.params;
     const actor = await this.actorService.getActorByUsername(username);
     if (!actor) {
-      return res.status(404).json({ error: 'Actor not found' });
+      return next(new AppError("Actor not found", 404, ErrorType.NOT_FOUND));
     }
 
     // Remove sensitive information from the response
@@ -131,7 +135,7 @@ export class ActorsController {
 
       if (!updatedActor) {
         throw new AppError(
-          'Actor not found or update failed',
+          "Actor not found or update failed",
           404,
           ErrorType.NOT_FOUND
         );
@@ -172,7 +176,7 @@ export class ActorsController {
         const success = await this.actorService.deleteActor(actorId);
 
         if (!success) {
-          throw new AppError('Actor not found', 404, ErrorType.NOT_FOUND);
+          throw new AppError("Actor not found", 404, ErrorType.NOT_FOUND);
         }
         res.status(204).send();
       }
@@ -192,7 +196,7 @@ export class ActorsController {
       // Need a method in PostService like getPostsByActorUsername
       // const { posts, total } = await this.postService.getPostsByActorUsername(req.params.username, { limit, offset });
       // Placeholder response
-      console.warn('getPostsByActorUsername not implemented in PostService');
+      console.warn("getPostsByActorUsername not implemented in PostService");
       res.json({ posts: [], total: 0, limit, offset });
     } catch (error) {
       next(error);
@@ -231,7 +235,7 @@ export class ActorsController {
           `[ActorsController] Authorization failed - user ${user?.preferredUsername} attempted to update ${username}`
         );
         throw new AppError(
-          'Not authorized to update this actor',
+          "Not authorized to update this actor",
           403,
           ErrorType.FORBIDDEN
         );
@@ -242,7 +246,7 @@ export class ActorsController {
 
       if (!actor) {
         throw new AppError(
-          'Actor not found with username: ' + username,
+          "Actor not found with username: " + username,
           404,
           ErrorType.NOT_FOUND
         );
@@ -252,7 +256,7 @@ export class ActorsController {
 
       // Create clean update object
       const cleanUpdates: Partial<
-        Pick<Actor, 'displayName' | 'summary' | 'icon'>
+        Pick<Actor, "displayName" | "summary" | "icon">
       > = {};
 
       // Only include fields that are actually provided
@@ -279,7 +283,7 @@ export class ActorsController {
             `[ActorsController] Actor update failed, returned null for username: ${username}`
           );
           throw new AppError(
-            'Actor update failed',
+            "Actor update failed",
             500,
             ErrorType.INTERNAL_SERVER_ERROR
           );
@@ -301,7 +305,7 @@ export class ActorsController {
         );
         // Handle error with proper type casting
         const errorMessage =
-          updateError instanceof Error ? updateError.message : 'Unknown error';
+          updateError instanceof Error ? updateError.message : "Unknown error";
 
         throw new AppError(
           `Actor update failed: ${errorMessage}`,

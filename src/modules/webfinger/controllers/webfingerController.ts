@@ -1,8 +1,9 @@
-import type { Request, Response } from 'express';
-import type { ActorService } from '@/modules/actors/services/actorService';
-import type { WebfingerService } from '../services/webfinger.service';
-import type { ServiceContainer } from '../../../utils/container';
+import type { Request, Response, NextFunction } from "express";
+import type { ActorService } from "@/modules/actors/services/actorService";
+import type { WebfingerService } from "../services/webfinger.service";
+import type { ServiceContainer } from "../../../utils/container";
 
+import { AppError, ErrorType } from "../../../utils/errors";
 // Extend Request type locally for this controller
 interface RequestWithServices extends Request {
   services: ServiceContainer; // Changed to required property to match expected type
@@ -28,22 +29,25 @@ export class WebFingerController {
    */
   async getResource(
     req: RequestWithServices,
-    res: Response
-  ): Promise<Response> {
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> {
     try {
       const resource = req.query.resource as string;
 
       if (!resource) {
         return res
           .status(400)
-          .json({ error: 'Resource query parameter is required' });
+          .json({ error: "Resource query parameter is required" });
       }
 
       // Parse the resource URI (acct:username@domain)
       const match = /^acct:([^@]+)@(.+)$/.exec(resource);
 
       if (!match) {
-        return res.status(400).json({ error: 'Invalid resource format' });
+        return next(
+          new AppError("Invalid resource format", 400, ErrorType.VALIDATION)
+        );
       }
 
       const [, username, resourceDomain] = match;
@@ -51,14 +55,16 @@ export class WebFingerController {
 
       // Verify this is for our domain
       if (resourceDomain !== serverDomain) {
-        return res.status(404).json({ error: 'Resource not found' });
+        return next(
+          new AppError("Resource not found", 404, ErrorType.NOT_FOUND)
+        );
       }
 
       // Look up the actor
       const actor = await this.actorService.getActorByUsername(username);
 
       if (!actor) {
-        return res.status(404).json({ error: 'User not found' });
+        return next(new AppError("User not found", 404, ErrorType.NOT_FOUND));
       }
 
       // Return WebFinger response
@@ -66,15 +72,15 @@ export class WebFingerController {
         subject: `acct:${username}@${this.domain}`,
         links: [
           {
-            rel: 'self',
-            type: 'application/activity+json',
+            rel: "self",
+            type: "application/activity+json",
             href: `https://${this.domain}/users/${username}`,
           },
         ],
       });
     } catch (error) {
-      console.error('WebFinger error:', error);
-      return res.status(500).json({ error: 'Server error' });
+      console.error("WebFinger error:", error);
+      return next(new AppError("Server error", 500, ErrorType.SERVER_ERROR));
     }
   }
 }

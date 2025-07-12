@@ -1,52 +1,58 @@
-import type { Request, Response, Router, NextFunction } from 'express';
-import express from 'express';
-import { ActivityPubController } from '../controllers/activitypubController';
-import type { ServiceContainer } from '../../../utils/container';
-import { wrapAsync } from '../../../utils/routeHandler';
-import { verifyHttpSignature } from '../../../middleware/httpSignature';
+import type { Request, Response, NextFunction } from "express";
+import express from "express";
+import { ActivityPubController } from "../controllers/activitypubController";
+import type { ServiceContainer } from "../../../utils/container";
+import { wrapAsync } from "../../../utils/routeHandler";
+import { verifyHttpSignature } from "../../../middleware/httpSignature";
 
 /**
- * Configure ActivityPub routes with the controller
+ * Configure ActivityPub routes for federation
  */
 export function configureActivityPubRoutes(
   serviceContainer: ServiceContainer
-): Router {
+): express.Router {
   const router = express.Router();
-  const { actorService, activityPubService } = serviceContainer;
-  const domain = process.env.DOMAIN || 'localhost:4000';
+  const { actorService, activityPubService, domain } = serviceContainer;
 
-  // Create controller with injected dependencies
+  // Create controller with injected services
   const activityPubController = new ActivityPubController(
     actorService,
     activityPubService,
     domain
   );
 
-  // Get ActivityPub actor profile (federated)
+  // Get ActivityPub actor profile
   router.get(
-    '/users/:username',
-    wrapAsync(async (req: Request, res: Response, _next: NextFunction) => {
-      return activityPubController.getActor(req, res);
-    })
+    "/users/:username",
+    (req: Request, res: Response, next: NextFunction) => {
+      // Add Accept header check for ActivityPub
+      if (
+        req.headers.accept?.includes("application/activity+json") ||
+        req.headers.accept?.includes("application/ld+json")
+      ) {
+        return activityPubController.getActor(req, res, next);
+      }
+      return next(); // Pass to next middleware if not ActivityPub request
+    }
   );
 
-  // Actor inbox - where activities from other servers arrive
+  // Actor inbox endpoint
   router.post(
-    '/users/:username/inbox',
-    express.json(),
-    verifyHttpSignature,
-    wrapAsync(async (req: Request, res: Response, _next: NextFunction) => {
-      return activityPubController.receiveActivity(req, res);
-    })
+    "/users/:username/inbox",
+    (req: Request, res: Response, next: NextFunction) => {
+      return activityPubController.receiveActivity(req, res, next);
+    }
   );
 
-  // Actor outbox - collection of activities by this user
+  // Actor outbox endpoint
   router.get(
-    '/users/:username/outbox',
-    wrapAsync(async (req: Request, res: Response, _next: NextFunction) => {
-      return activityPubController.getOutbox(req, res);
-    })
+    "/users/:username/outbox",
+    (req: Request, res: Response, next: NextFunction) => {
+      return activityPubController.getOutbox(req, res, next);
+    }
   );
 
   return router;
 }
+
+export default configureActivityPubRoutes;

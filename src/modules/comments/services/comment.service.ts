@@ -1,15 +1,19 @@
-import type { Comment, CreateCommentDto, FormattedComment } from '../models/comment';
-import type { CommentRepository } from '../repositories/comment.repository';
-import type { PostService } from '../../posts/services/postService';
-import type { ActorService } from '../../actors/services/actorService';
-import type { NotificationService } from '../../notifications/services/notification.service';
-import { NotificationType } from '../../notifications/models/notification';
-import { AppError, ErrorType } from '../../../utils/errors';
-import type { Actor } from '../../../modules/actors/models/actor';
-import { Post as _Post } from '../../../modules/posts/models/post';
-import { ObjectId } from 'mongodb';
-import type { OptionalId } from 'mongodb';
-import type { CreateNotificationDto } from '../../notifications/models/notification';
+import type {
+  Comment,
+  CreateCommentDto,
+  FormattedComment,
+} from "../models/comment";
+import type { CommentRepository } from "../repositories/comment.repository";
+import type { PostService } from "../../posts/services/postService";
+import type { ActorService } from "../../actors/services/actorService";
+import type { NotificationService } from "../../notifications/services/notification.service";
+import { NotificationType } from "../../notifications/models/notification";
+import { AppError, ErrorType } from "../../../utils/errors";
+import type { Actor } from "../../../modules/actors/models/actor";
+import { Post as _Post } from "../../../modules/posts/models/post";
+import { ObjectId } from "mongodb";
+import type { OptionalId } from "mongodb";
+import type { CreateNotificationDto } from "../../notifications/models/notification";
 
 export class CommentService {
   private repository: CommentRepository;
@@ -48,12 +52,12 @@ export class CommentService {
   ): Promise<Comment> {
     const post = await this.postService.getPostById(postId.toString());
     if (!post) {
-      throw new AppError('Post not found', 404, ErrorType.NOT_FOUND);
+      throw new AppError("Post not found", 404, ErrorType.NOT_FOUND);
     }
 
     const actor = await this.actorService.getActorById(authorId);
     if (!actor) {
-      throw new AppError('Author not found', 404, ErrorType.NOT_FOUND);
+      throw new AppError("Author not found", 404, ErrorType.NOT_FOUND);
     }
 
     const now = new Date();
@@ -128,7 +132,7 @@ export class CommentService {
 
     // Format comments with author details
     const formattedComments = await Promise.all(
-      comments.map(async comment => {
+      comments.map(async (comment) => {
         const author = await this.actorService.getActorById(comment.authorId);
         return this.formatComment(comment, author);
       })
@@ -179,10 +183,11 @@ export class CommentService {
       ...comment,
       author: {
         id: comment.authorId,
-        username: author?.preferredUsername || 'unknown',
+        username: author?.username || "unknown",
+        preferredUsername: author?.preferredUsername || "unknown",
         displayName:
-          author?.name || author?.preferredUsername || 'Unknown User',
-        avatarUrl: author?.icon?.url,
+          author?.name || author?.preferredUsername || "Unknown User",
+        iconUrl: author?.icon?.url,
       },
     };
   }
@@ -202,13 +207,14 @@ export class CommentService {
 
     for (const mention of mentions) {
       const username = mention.substring(1);
-      const mentionedUser =
-        await this.actorService.getActorByUsername(username);
+      const mentionedUser = await this.actorService.getActorByUsername(
+        username
+      );
 
       if (
         mentionedUser &&
         mentionedUser._id.toHexString() !==
-          (typeof authorId === 'string' ? authorId : authorId.toHexString())
+          (typeof authorId === "string" ? authorId : authorId.toHexString())
       ) {
         const commentIdForNotification =
           commentId instanceof ObjectId ? commentId.toHexString() : commentId; // Assume string if not ObjectId
@@ -217,9 +223,9 @@ export class CommentService {
           type: NotificationType.MENTION,
           recipientUserId: mentionedUser._id.toHexString(),
           actorUserId:
-            typeof authorId === 'string' ? authorId : authorId.toHexString(),
+            typeof authorId === "string" ? authorId : authorId.toHexString(),
           content: `mentioned you in a comment: ${content.substring(0, 50)}...`,
-          postId: typeof postId === 'string' ? postId : postId.toHexString(),
+          postId: typeof postId === "string" ? postId : postId.toHexString(),
           commentId: commentIdForNotification, // <<< Use checked variable
         };
         await this.notificationService.createNotification(notificationDto);
