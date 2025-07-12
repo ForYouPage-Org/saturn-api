@@ -1,11 +1,11 @@
-import type { Db, Filter, UpdateFilter } from 'mongodb';
-import { ObjectId } from 'mongodb';
-import { MongoRepository } from '../../shared/repositories/baseRepository';
-import type { Actor } from '../models/actor';
+import type { Db, Filter, UpdateFilter } from "mongodb";
+import { ObjectId } from "mongodb";
+import { MongoRepository } from "../../shared/repositories/baseRepository";
+import type { Actor } from "../models/actor";
 
 export class ActorRepository extends MongoRepository<Actor> {
   constructor(db: Db) {
-    super(db, 'actors');
+    super(db, "actors");
     // Ensure indexes are created
     void this.collection.createIndex({ username: 1 }, { unique: true });
     void this.collection.createIndex(
@@ -35,7 +35,7 @@ export class ActorRepository extends MongoRepository<Actor> {
 
   async updateProfile(
     id: string | ObjectId,
-    updates: Partial<Pick<Actor, 'displayName' | 'summary' | 'icon'>>
+    updates: Partial<Pick<Actor, "displayName" | "summary" | "icon">>
   ): Promise<Actor | null> {
     try {
       console.log(`[ActorRepository] Updating profile for actor ID: ${id}`);
@@ -43,7 +43,7 @@ export class ActorRepository extends MongoRepository<Actor> {
 
       // Convert to ObjectId if needed
       let objectId: ObjectId;
-      if (typeof id === 'string') {
+      if (typeof id === "string") {
         try {
           if (ObjectId.isValid(id)) {
             objectId = new ObjectId(id);
@@ -96,8 +96,8 @@ export class ActorRepository extends MongoRepository<Actor> {
           .limit(5)
           .toArray();
         console.log(
-          '[ActorRepository] First 5 actors in collection:',
-          actorsByUsername.map(a => ({
+          "[ActorRepository] First 5 actors in collection:",
+          actorsByUsername.map((a) => ({
             id: a._id.toString(),
             username: a.preferredUsername,
           }))
@@ -159,18 +159,73 @@ export class ActorRepository extends MongoRepository<Actor> {
     actorId: string | ObjectId,
     targetActorApId: string
   ): Promise<boolean> {
-    return this.updateById(actorId, {
-      $addToSet: { following: targetActorApId },
-    } as UpdateFilter<Actor>);
+    try {
+      console.log(`[ActorRepository] addFollowing called with actorId=${actorId}, targetActorApId=${targetActorApId}`);
+      
+      // Convert to ObjectId for proper querying
+      const objectId = actorId instanceof ObjectId ? actorId : new ObjectId(actorId);
+      const idString = objectId.toString();
+      console.log(`[ActorRepository] Using ObjectId: ${objectId}, string: ${idString}`);
+      
+      // First, let's find the user to see if they exist (try both _id and id fields)
+      let user = await this.collection.findOne({ _id: objectId } as any);
+      if (!user) {
+        console.log(`[ActorRepository] User not found with _id ObjectId: ${objectId}`);
+        // Try finding by id field (string version)
+        user = await this.collection.findOne({ id: idString } as any);
+        if (!user) {
+          console.log(`[ActorRepository] User not found with id field either: ${idString}`);
+          return false;
+        }
+        console.log(`[ActorRepository] Found user by id field: ${user.preferredUsername}`);
+      } else {
+        console.log(`[ActorRepository] Found user by _id: ${user.preferredUsername}`);
+      }
+      
+      // Initialize following array if it doesn't exist or is null
+      await this.collection.updateOne(
+        { $or: [{ _id: objectId }, { id: idString }] } as any,
+        { $set: { following: [] } }
+      );
+      
+      // Now add the target to the following list
+      const result = await this.collection.updateOne(
+        { $or: [{ _id: objectId }, { id: idString }] } as any,
+        { $addToSet: { following: targetActorApId } }
+      );
+      
+      console.log(`[ActorRepository] Update result: matched=${result.matchedCount}, modified=${result.modifiedCount}`);
+      return result.matchedCount > 0;
+    } catch (error) {
+      console.error('[ActorRepository] Error in addFollowing:', error);
+      return false;
+    }
   }
 
   async removeFollowing(
     actorId: string | ObjectId,
     targetActorApId: string
   ): Promise<boolean> {
-    return this.updateById(actorId, {
-      $pull: { following: targetActorApId },
-    } as UpdateFilter<Actor>);
+    try {
+      console.log(`[ActorRepository] removeFollowing called with actorId=${actorId}, targetActorApId=${targetActorApId}`);
+      
+      // Convert to ObjectId for proper querying
+      const objectId = actorId instanceof ObjectId ? actorId : new ObjectId(actorId);
+      const idString = objectId.toString();
+      console.log(`[ActorRepository] Using ObjectId: ${objectId}, string: ${idString}`);
+      
+      // Remove the target from the following list
+      const result = await this.collection.updateOne(
+        { $or: [{ _id: objectId }, { id: idString }] } as any,
+        { $pull: { following: targetActorApId } }
+      );
+      
+      console.log(`[ActorRepository] Remove result: matched=${result.matchedCount}, modified=${result.modifiedCount}`);
+      return result.matchedCount > 0;
+    } catch (error) {
+      console.error('[ActorRepository] Error in removeFollowing:', error);
+      return false;
+    }
   }
 
   // Add usernameExists method
@@ -212,8 +267,8 @@ export class ActorRepository extends MongoRepository<Actor> {
     // Simple search by preferredUsername or displayName (case-insensitive)
     const filter: Filter<Actor> = {
       $or: [
-        { preferredUsername: { $regex: query, $options: 'i' } },
-        { displayName: { $regex: query, $options: 'i' } },
+        { preferredUsername: { $regex: query, $options: "i" } },
+        { displayName: { $regex: query, $options: "i" } },
       ],
     };
     return this.find(filter, { limit });

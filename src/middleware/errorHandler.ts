@@ -128,7 +128,7 @@ export function errorHandler(
       process.env.NODE_ENV === "production"
         ? "Internal server error"
         : err instanceof Error
-        ? err.message
+          ? err.message
         : "Unknown error",
   });
 }

@@ -271,10 +271,10 @@ export class ActorService {
   // --- Follow Actor ---
   async follow(
     followerId: string | ObjectId,
-    followeeId: string
+    followeeApId: string
   ): Promise<boolean> {
     console.log(
-      `[ActorService] Follow request: followerId=${followerId}, followeeId=${followeeId}`
+      `[ActorService] Follow request: followerId=${followerId}, followeeApId=${followeeApId}`
     );
 
     const follower = await this.getActorById(followerId);
@@ -285,23 +285,25 @@ export class ActorService {
 
     console.log(`[ActorService] Found follower: ${follower.preferredUsername}`);
 
-    // For now, we'll use getActorById instead of getActorByApId since our data structure
-    // doesn't have proper ActivityPub URLs yet
-    const followee = await this.getActorById(followeeId);
+    // Find followee by ActivityPub ID
+    const followee = await this.getActorByApId(followeeApId);
     if (!followee) {
-      console.error(`[ActorService] Followee not found with ID: ${followeeId}`);
+      console.error(
+        `[ActorService] Followee not found with AP ID: ${followeeApId}`
+      );
       throw new AppError("Followee not found", 404, ErrorType.NOT_FOUND);
     }
 
     console.log(`[ActorService] Found followee: ${followee.preferredUsername}`);
 
-    // Add followee ID to follower's following list
+    // Add followee ActivityPub ID to follower's following list
     console.log(
-      `[ActorService] Adding ${followee.id} to ${follower.preferredUsername}'s following list`
+      `[ActorService] Adding ${followeeApId} to ${follower.preferredUsername}'s following list`
     );
+    // Use the follower's ObjectId directly instead of the currentUser._id
     const result = await this.actorRepository.addFollowing(
       follower._id,
-      followee.id
+      followeeApId
     );
 
     console.log(`[ActorService] Follow operation result: ${result}`);
@@ -316,10 +318,10 @@ export class ActorService {
   // --- Unfollow Actor ---
   async unfollow(
     followerId: string | ObjectId,
-    followeeId: string
+    followeeApId: string
   ): Promise<boolean> {
     console.log(
-      `[ActorService] Unfollow request: followerId=${followerId}, followeeId=${followeeId}`
+      `[ActorService] Unfollow request: followerId=${followerId}, followeeApId=${followeeApId}`
     );
 
     const follower = await this.getActorById(followerId);
@@ -330,22 +332,24 @@ export class ActorService {
 
     console.log(`[ActorService] Found follower: ${follower.preferredUsername}`);
 
-    // For now, we'll use getActorById instead of getActorByApId
-    const followee = await this.getActorById(followeeId);
+    // Find followee by ActivityPub ID
+    const followee = await this.getActorByApId(followeeApId);
     if (!followee) {
-      console.error(`[ActorService] Followee not found with ID: ${followeeId}`);
+      console.error(
+        `[ActorService] Followee not found with AP ID: ${followeeApId}`
+      );
       throw new AppError("Followee not found", 404, ErrorType.NOT_FOUND);
     }
 
     console.log(`[ActorService] Found followee: ${followee.preferredUsername}`);
 
-    // Remove followee ID from follower's following list
+    // Remove followee ActivityPub ID from follower's following list
     console.log(
-      `[ActorService] Removing ${followee.id} from ${follower.preferredUsername}'s following list`
+      `[ActorService] Removing ${followeeApId} from ${follower.preferredUsername}'s following list`
     );
     const result = await this.actorRepository.removeFollowing(
       follower._id,
-      followee.id
+      followeeApId
     );
 
     console.log(`[ActorService] Unfollow operation result: ${result}`);
@@ -387,4 +391,6 @@ export class ActorService {
   async usernameExists(username: string): Promise<boolean> {
     return this.actorRepository.usernameExists(username);
   }
+
+
 }

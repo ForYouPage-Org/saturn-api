@@ -376,11 +376,11 @@ export class ActorsController {
         `[ActorsController] Current user: ${currentUser.preferredUsername} (id: ${currentUser.id})`
       );
 
-      // Follow the user - pass the actor ID
+      // Follow the user - pass the current user's ObjectId and target user's ActivityPub ID
       try {
         const success = await this.actorService.follow(
-          currentUser.id,
-          targetActor.id // Use the id field which should work with getActorByApId
+          currentUser._id, // Use ObjectId for the follower
+          targetActor.id // Use ActivityPub ID for the followee
         );
 
         if (!success) {
@@ -440,11 +440,10 @@ export class ActorsController {
         throw new AppError("User not found", 404, ErrorType.NOT_FOUND);
       }
 
-      // Unfollow the user - pass the MongoDB ID as the ActivityPub ID for now
-      // TODO: When proper ActivityPub URLs are implemented, use those instead
+      // Unfollow the user - pass the current user's ObjectId and target user's ActivityPub ID
       const success = await this.actorService.unfollow(
-        currentUser.id,
-        targetActor._id.toString() // Use _id as the ActivityPub ID for now
+        currentUser._id, // Use ObjectId for the follower
+        targetActor.id // Use ActivityPub ID for the followee
       );
 
       if (!success) {
