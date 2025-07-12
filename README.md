@@ -183,6 +183,13 @@ https://saturn.foryoupage.org/api
 
 **Note:** This is a testing environment for development and demonstration purposes. Data may be reset periodically.
 
+**Production Server Architecture:**
+
+- **Landing Page**: `https://saturn.foryoupage.org/` (Static HTML served by nginx)
+- **API Endpoints**: `https://saturn.foryoupage.org/api/*` (Proxied to Node.js)
+- **Health Check**: `https://saturn.foryoupage.org/health` (Node.js health endpoint)
+- **Federation**: `https://saturn.foryoupage.org/.well-known/*` (ActivityPub/WebFinger)
+
 ### Authentication
 
 Most endpoints require authentication via JWT tokens:
@@ -221,6 +228,7 @@ POST /api/auth/register
 ```
 
 **Request Body:**
+
 ```json
 {
   "username": "johndoe",
@@ -230,6 +238,7 @@ POST /api/auth/register
 ```
 
 **Response (201):**
+
 ```json
 {
   "id": "user123",
@@ -245,6 +254,7 @@ POST /api/auth/login
 ```
 
 **Request Body:**
+
 ```json
 {
   "username": "johndoe",
@@ -253,6 +263,7 @@ POST /api/auth/login
 ```
 
 **Response (200):**
+
 ```json
 {
   "user": {
@@ -272,6 +283,7 @@ GET /api/auth/me
 **Headers:** `Authorization: Bearer <token>`
 
 **Response (200):**
+
 ```json
 {
   "id": "user123",
@@ -292,6 +304,7 @@ GET /api/actors/:username
 ```
 
 **Response (200):**
+
 ```json
 {
   "id": "actor123",
@@ -312,6 +325,7 @@ GET /api/actors/search?q=searchterm
 ```
 
 **Response (200):**
+
 ```json
 {
   "actors": [
@@ -333,6 +347,7 @@ PUT /api/actors/:id
 **Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
+
 ```json
 {
   "preferredUsername": "Updated Name",
@@ -353,6 +368,7 @@ GET /api/posts?page=1&limit=10
 **Headers:** `Authorization: Bearer <token>`
 
 **Response (200):**
+
 ```json
 {
   "posts": [
@@ -388,6 +404,7 @@ POST /api/posts
 **Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
+
 ```json
 {
   "content": "New post content",
@@ -396,6 +413,7 @@ POST /api/posts
 ```
 
 **Response (201):**
+
 ```json
 {
   "id": "post123",
@@ -418,6 +436,7 @@ POST /api/posts/:id/unlike
 **Headers:** `Authorization: Bearer <token>`
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -436,6 +455,7 @@ GET /api/comments/:postId?page=1&limit=10
 ```
 
 **Response (200):**
+
 ```json
 {
   "comments": [
@@ -468,6 +488,7 @@ POST /api/comments
 **Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
+
 ```json
 {
   "postId": "post123",
@@ -488,6 +509,7 @@ GET /api/notifications?page=1&limit=10&read=false
 **Headers:** `Authorization: Bearer <token>`
 
 **Response (200):**
+
 ```json
 {
   "notifications": [
@@ -519,6 +541,7 @@ POST /api/notifications/mark-read
 **Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
+
 ```json
 {
   "notificationIds": ["notif123", "notif124"]
@@ -542,6 +565,7 @@ POST /api/media/upload
 **Form Data:** `file` field with media file
 
 **Response (201):**
+
 ```json
 {
   "id": "media123",
@@ -697,12 +721,14 @@ const { actorService } = req.services;
 Our GitHub Actions pipeline provides enterprise-grade quality assurance:
 
 #### **Main CI Pipeline** (`.github/workflows/ci.yml`)
+
 - 🛡️ **Security & Dependency Audit** - CodeQL analysis, npm audit, vulnerability scanning
 - 📋 **Code Quality & Standards** - TypeScript strict compilation, ESLint enforcement, dead code detection
 - 🧪 **Comprehensive Testing** - Matrix testing (Node 18.20.0 & 20.10.0), MongoDB integration, coverage gates
 - 🏗️ **Build & Containerization** - Production build verification, artifact testing
 
 #### **Security Monitoring** (`.github/workflows/security-monitoring.yml`)
+
 - 🔍 **Advanced Security Scanning** - SAST with Semgrep, secret scanning with TruffleHog
 - 📈 **Performance Monitoring** - API benchmarks, memory analysis, bundle size tracking
 - 🔒 **Infrastructure Security** - Docker vulnerability scanning, workflow security reviews
@@ -711,27 +737,44 @@ Our GitHub Actions pipeline provides enterprise-grade quality assurance:
 ### CI/CD Configuration Files
 
 #### **Enterprise Jest Configuration** (`jest.config.enterprise.js`)
+
 ```javascript
 // Enterprise-grade testing with strict coverage requirements
 module.exports = {
-  preset: 'ts-jest',
-  testEnvironment: 'node',
+  preset: "ts-jest",
+  testEnvironment: "node",
   coverageThreshold: {
     global: { statements: 80, branches: 75, functions: 80, lines: 80 },
-    './src/modules/auth/**/*.ts': { statements: 90, branches: 85, functions: 90, lines: 90 },
-    './src/utils/**/*.ts': { statements: 95, branches: 90, functions: 95, lines: 95 }
+    "./src/modules/auth/**/*.ts": {
+      statements: 90,
+      branches: 85,
+      functions: 90,
+      lines: 90,
+    },
+    "./src/utils/**/*.ts": {
+      statements: 95,
+      branches: 90,
+      functions: 95,
+      lines: 95,
+    },
   },
-  collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/**/*.d.ts', '!src/types/**/*.ts']
+  collectCoverageFrom: [
+    "src/**/*.{ts,tsx}",
+    "!src/**/*.d.ts",
+    "!src/types/**/*.ts",
+  ],
 };
 ```
 
 #### **Pipeline Triggers**
+
 - **Push to main/develop** - Full CI/CD pipeline execution
 - **Pull requests** - Quality gates and security checks
 - **Daily schedule** - Security monitoring and vulnerability scanning
 - **Manual dispatch** - On-demand security scans with configurable scope
 
 #### **Quality Gate Enforcement**
+
 - **TypeScript**: Strict compilation with enterprise settings
 - **ESLint**: Zero-error policy with comprehensive rules
 - **Security**: No high/critical vulnerabilities allowed
@@ -741,6 +784,7 @@ module.exports = {
 ### Quality Gates
 
 All deployments must pass:
+
 - ✅ Zero TypeScript compilation errors
 - ✅ Zero ESLint errors (warnings allowed)
 - ✅ Minimum test coverage thresholds (50% current, 80% target)
@@ -785,13 +829,94 @@ yarn start
 
 ### Production Deployment
 
+#### **Production Architecture**
+
+```
+Internet → nginx (Port 80/443) → Node.js API (Port 4000)
+              ↓
+         Static Landing Page (/var/www/saturn-landing/)
+```
+
+**URL Structure:**
+
+- `saturn.foryoupage.org/` → Static landing page
+- `saturn.foryoupage.org/api/*` → API endpoints
+- `saturn.foryoupage.org/health` → Health check
+
+#### **Production Server Setup**
+
+**1. nginx Configuration**
+
+```nginx
+server {
+    server_name saturn.foryoupage.org;
+
+    # Landing page - serve static files
+    location / {
+        root /var/www/saturn-landing;
+        index index.html;
+        try_files $uri $uri/ /index.html;
+    }
+
+    # API endpoints - proxy to Node.js
+    location /api/ {
+        proxy_pass http://localhost:4000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 86400;
+    }
+
+    # Health check endpoint
+    location /health {
+        proxy_pass http://localhost:4000/health;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # ActivityPub federation endpoints (root level)
+    location ~ ^/(\.well-known|users)/ {
+        proxy_pass http://localhost:4000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/saturn.foryoupage.org/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/saturn.foryoupage.org/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+}
+```
+
+**2. Directory Structure**
+
+```
+/var/www/saturn-landing/     # Static landing page
+/root/saturn-api/            # Node.js API application
+/etc/nginx/sites-available/  # nginx configuration
+```
+
 #### **Quick Deployment**
+
 ```bash
 # Automated deployment with quality checks
 yarn deploy
 ```
 
 #### **Manual Deployment Steps**
+
 ```bash
 # 1. Install dependencies
 yarn install --frozen-lockfile
@@ -808,7 +933,40 @@ yarn deploy:pm2
 yarn deploy:logs
 ```
 
+#### **Updating Production (Step-by-Step)**
+
+```bash
+# 1. Pull latest changes
+cd /root/saturn-api
+git pull origin main
+
+# 2. Install dependencies
+yarn install --frozen-lockfile
+
+# 3. Build application
+yarn build
+
+# 4. Update static files (if changed)
+sudo cp public/index.html /var/www/saturn-landing/
+sudo chown -R www-data:www-data /var/www/saturn-landing
+
+# 5. Test nginx configuration
+sudo nginx -t
+
+# 6. Reload nginx (if config changed)
+sudo systemctl reload nginx
+
+# 7. Restart API server
+pm2 restart saturn-api
+
+# 8. Verify deployment
+curl -I https://saturn.foryoupage.org/
+curl -I https://saturn.foryoupage.org/health
+curl -I https://saturn.foryoupage.org/api/health
+```
+
 #### **PM2 Process Management**
+
 ```bash
 # Start/stop/restart
 yarn deploy:pm2      # Start with PM2
@@ -822,6 +980,7 @@ pm2 monit           # Real-time monitoring
 ```
 
 #### **Production Environment Setup**
+
 ```bash
 # Set up PM2 to start on boot
 pm2 startup
@@ -851,7 +1010,7 @@ CMD ["yarn", "start"]
 ### Infrastructure Requirements
 
 - **Node.js 18+** runtime
-- **MongoDB 6.0+** database  
+- **MongoDB 6.0+** database
 - **File storage** for media uploads
 - **Reverse proxy** (nginx/traefik) for HTTPS
 - **Process manager** (PM2/systemd) for production
@@ -877,17 +1036,20 @@ CMD ["yarn", "start"]
 Our security testing covers:
 
 #### **Authentication Security** (`src/modules/auth/__tests__/auth.middleware.security.test.ts`)
+
 - JWT token validation (malformed, expired, invalid signatures)
 - User lookup security and error handling
 - Request object sanitization
 
 #### **File Upload Security** (`src/modules/media/__tests__/upload.security.test.ts`)
+
 - File type validation and MIME type verification
 - Path traversal attack prevention
 - Malicious file detection and blocking
 - File size and content validation
 
 #### **Input Validation Security** (`src/modules/auth/__tests__/validation.security.test.ts`)
+
 - SQL injection prevention testing
 - XSS attack mitigation validation
 - Type confusion attack protection
@@ -896,6 +1058,7 @@ Our security testing covers:
 ### Automated Security Monitoring
 
 Daily security scans include:
+
 - **SAST Analysis** - Static Application Security Testing with Semgrep
 - **Dependency Auditing** - Automated vulnerability scanning of npm packages
 - **Secret Scanning** - TruffleHog integration for credential leak detection
@@ -905,6 +1068,7 @@ Daily security scans include:
 ### Security Best Practices
 
 #### Development
+
 - Keep dependencies updated with automated security patches
 - Use strong JWT secrets (minimum 32 characters, preferably 64+)
 - Configure rate limits based on endpoint sensitivity
@@ -914,6 +1078,7 @@ Daily security scans include:
 - Sanitize file uploads and restrict execution permissions
 
 #### Production
+
 - Use HTTPS exclusively with proper TLS configuration
 - Implement proper logging and monitoring
 - Regular security audits and penetration testing
@@ -950,6 +1115,7 @@ Daily security scans include:
 Our enterprise development standards require:
 
 #### **Mandatory Quality Gates**
+
 - All code must pass TypeScript strict type checking
 - Zero ESLint errors (warnings acceptable with justification)
 - Minimum test coverage maintained (module-specific thresholds)
@@ -957,12 +1123,14 @@ Our enterprise development standards require:
 - All CI/CD pipeline checks must succeed
 
 #### **Testing Requirements**
+
 - Unit tests for all new business logic
 - Security tests for authentication and input validation
 - Integration tests for API endpoints
 - Coverage thresholds: Auth (90%), Core modules (85%), Utils (95%)
 
 #### **Documentation Standards**
+
 - API changes must be documented in README
 - Security-sensitive changes require security review
 - Breaking changes require major version bump
@@ -1003,6 +1171,7 @@ Our enterprise development standards require:
 ### Common Issues
 
 **TypeScript Compilation Errors:**
+
 ```bash
 # Clear build cache and rebuild
 yarn clean
@@ -1016,6 +1185,7 @@ yarn test --config=jest.config.enterprise.js
 ```
 
 **Database Connection Issues:**
+
 ```bash
 # Check MongoDB status
 mongosh --eval "db.runCommand('ping')"
@@ -1028,6 +1198,7 @@ yarn test test/helpers/testMongoMemory.ts
 ```
 
 **CI/CD Pipeline Failures:**
+
 ```bash
 # Run local CI checks
 yarn lint:check
@@ -1042,6 +1213,7 @@ yarn build && node dist/index.js
 ```
 
 **Test Coverage Issues:**
+
 ```bash
 # Check current coverage
 yarn test:coverage
@@ -1054,6 +1226,7 @@ yarn test --config=jest.config.enterprise.js --coverage
 ```
 
 **Security Scan Failures:**
+
 ```bash
 # Run local security checks
 npm audit --audit-level=moderate
@@ -1066,6 +1239,7 @@ yarn test src/modules/media/__tests__/upload.security.test.ts
 ```
 
 **Production Deployment Failures:**
+
 ```bash
 # Check PM2 process status
 pm2 status
@@ -1085,7 +1259,39 @@ ls -la dist/
 node dist/index.js --version || echo "Check for module resolution issues"
 ```
 
+**nginx Configuration Issues:**
+
+```bash
+# Test nginx configuration
+sudo nginx -t
+
+# Check nginx error logs
+sudo tail -f /var/log/nginx/error.log
+
+# Verify nginx is running
+sudo systemctl status nginx
+
+# Reload nginx configuration
+sudo systemctl reload nginx
+
+# Check if nginx is proxying correctly
+curl -I http://localhost:4000/health  # Direct to Node.js
+curl -I https://yourdomain.com/health # Through nginx
+
+# Verify static files are served correctly
+curl -I https://yourdomain.com/       # Should return HTML
+ls -la /var/www/saturn-landing/       # Check static file permissions
+
+# Common nginx proxy issues:
+# 1. Missing proxy_pass directive in location blocks
+# 2. Incorrect upstream server (should be localhost:4000)
+# 3. Missing proxy headers for proper forwarding
+# 4. SSL certificate issues with Let's Encrypt
+# 5. Incorrect root directory for static files
+```
+
 **Module Resolution Issues:**
+
 ```bash
 # Ensure module-alias is installed in production
 yarn add module-alias
@@ -1098,6 +1304,7 @@ grep -r "require('@/" dist/ | head -5
 ```
 
 **Port Already in Use:**
+
 ```bash
 # Find process using port 4000
 lsof -ti:4000
@@ -1107,6 +1314,7 @@ kill -9 $(lsof -ti:4000)
 ```
 
 **Environment Variables Not Loading:**
+
 ```bash
 # Verify .env file exists and is readable
 ls -la .env
@@ -1129,6 +1337,7 @@ Then attach your debugger to `localhost:9229`.
 ### Logs
 
 Application logs are structured and include:
+
 - Request/response logging
 - Database operations
 - Error details with stack traces
@@ -1163,4 +1372,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Made with ❤️ by FYP Saturn Team**
 
-*Building the future of decentralized social media, FYP Saturn: Own Your Orbit*
+_Building the future of decentralized social media, FYP Saturn: Own Your Orbit_
