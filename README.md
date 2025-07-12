@@ -479,6 +479,8 @@ Authorization: Bearer <jwt_token>
 
 🚨 **SECURITY NOTICE**: Authentication endpoints currently expose the `email` field in responses. This is a security/privacy concern that will be addressed in a future update.
 
+✅ **RECENT FIX**: Fixed login endpoint issue where `findByUsername` was incorrectly searching by `preferredUsername` instead of `username` field. This resolves intermittent login failures reported by frontend teams.
+
 ### Register User
 
 ```http
