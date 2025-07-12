@@ -601,6 +601,179 @@ Returns ActivityPub Actor object for federation.
 
 Our enterprise-grade testing strategy ensures code quality, security, and reliability:
 
+### Live API Testing Accounts
+
+**Test Server:** `https://saturn.foryoupage.org/api`
+
+We have created several test accounts for comprehensive API testing:
+
+#### Test Accounts
+
+| Username         | Email                  | Password              | Purpose                 | JWT Token (Valid 24h)                                                                                                                                                                                              |
+| ---------------- | ---------------------- | --------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `testuser`       | `testuser@example.com` | `SecurePassword123!`  | General testing         | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NzJiOTcwODJiOWUxODliZjk4MjgwNCIsInVzZXJuYW1lIjoidGVzdHVzZXIiLCJpYXQiOjE3NTIzNDkyMTUsImV4cCI6MTc1MjQzNTYxNX0.jw5Hr85-hEMXaIXdClwpJ-F5ifZLm5xJGBVuzN6k_vk`         |
+| `adminuser`      | `admin@example.com`    | `AdminPassword123!`   | Admin functionality     | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NzJiOTc3ODJiOWUxODliZjk4MjgwNSIsInVzZXJuYW1lIjoiYWRtaW51c2VyIiwiaWF0IjoxNzUyMzQ5MDQ3LCJleHAiOjE3NTI0MzU0NDd9.354nYa15gc4cbEx2VvjwX_xVpuibmT3qQjZz1_UKkII`        |
+| `contentcreator` | `creator@example.com`  | `CreatorPassword123!` | Content & media testing | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NzJiOTdmODJiOWUxODliZjk4MjgwNiIsInVzZXJuYW1lIjoiY29udGVudGNyZWF0b3IiLCJpYXQiOjE3NTIzNDkwNTUsImV4cCI6MTc1MjQzNTQ1NX0.4LMirX2sutzmOvbgsoVo5hPPDHkSLUlgOyylbVE6qZ4` |
+| `socialuser`     | `social@example.com`   | `SocialPassword123!`  | Social interactions     | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NzJiYTE5ODJiOWUxODliZjk4MjgwOSIsInVzZXJuYW1lIjoic29jaWFsdXNlciIsImlhdCI6MTc1MjM0OTIwOSwiZXhwIjoxNzUyNDM1NjA5fQ.87Qi7G2_Pwi5FS3lKceyToLatUpQyMx2noaQkdZX-QM`      |
+
+**Note:** Tokens expire after 24 hours. Use the login endpoint to get fresh tokens.
+
+#### API Testing Examples
+
+**Health Check:**
+
+```bash
+curl https://saturn.foryoupage.org/health
+```
+
+**Authentication:**
+
+```bash
+# Login
+curl -X POST https://saturn.foryoupage.org/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "testuser", "password": "SecurePassword123!"}'
+
+# Get current user
+curl https://saturn.foryoupage.org/api/auth/me \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+**Posts:**
+
+```bash
+# Create a post
+curl -X POST https://saturn.foryoupage.org/api/posts \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  -d '{"content": "Hello Saturn! 🪐", "attachments": []}'
+
+# Get feed
+curl https://saturn.foryoupage.org/api/posts?page=1&limit=10 \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+**Actor Management:**
+
+```bash
+# Get actor profile
+curl https://saturn.foryoupage.org/api/actors/testuser \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+
+# Search actors
+curl "https://saturn.foryoupage.org/api/actors/search?q=content" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+**Federation:**
+
+```bash
+# WebFinger discovery
+curl "https://saturn.foryoupage.org/.well-known/webfinger?resource=acct:testuser@saturn.foryoupage.org"
+
+# ActivityPub actor
+curl https://saturn.foryoupage.org/users/testuser \
+  -H "Accept: application/activity+json"
+```
+
+**Rate Limiting:**
+The API implements rate limiting (100 requests per 15 minutes). If you encounter rate limit errors, wait a few minutes before retrying.
+
+#### Testing Scenarios
+
+**1. User Registration & Authentication Flow:**
+
+```bash
+# Register new user
+curl -X POST https://saturn.foryoupage.org/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username": "newuser", "email": "new@example.com", "password": "Password123!"}'
+
+# Login with existing account
+curl -X POST https://saturn.foryoupage.org/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "testuser", "password": "SecurePassword123!"}'
+
+# Verify token with /me endpoint
+curl https://saturn.foryoupage.org/api/auth/me \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+**2. Content Creation & Management:**
+
+```bash
+# Create a post with testuser
+curl -X POST https://saturn.foryoupage.org/api/posts \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TESTUSER_TOKEN" \
+  -d '{"content": "Testing post creation! 🚀 #test", "attachments": []}'
+
+# Create a post with contentcreator
+curl -X POST https://saturn.foryoupage.org/api/posts \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer CONTENTCREATOR_TOKEN" \
+  -d '{"content": "Content creator posting amazing content! 🎨 #creative", "attachments": []}'
+
+# Get posts feed
+curl https://saturn.foryoupage.org/api/posts?page=1&limit=10 \
+  -H "Authorization: Bearer ANY_TOKEN"
+```
+
+**3. Social Interactions:**
+
+```bash
+# Search for users
+curl "https://saturn.foryoupage.org/api/actors/search?q=content" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Get specific user profile
+curl https://saturn.foryoupage.org/api/actors/testuser \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**4. Federation Testing:**
+
+```bash
+# Test WebFinger discovery
+curl "https://saturn.foryoupage.org/.well-known/webfinger?resource=acct:testuser@saturn.foryoupage.org"
+
+# Test ActivityPub actor endpoint
+curl https://saturn.foryoupage.org/users/testuser \
+  -H "Accept: application/activity+json"
+
+# Test ActivityPub for contentcreator
+curl https://saturn.foryoupage.org/users/contentcreator \
+  -H "Accept: application/activity+json"
+```
+
+**5. Error Handling & Security:**
+
+```bash
+# Test invalid credentials
+curl -X POST https://saturn.foryoupage.org/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "testuser", "password": "wrongpassword"}'
+
+# Test unauthorized access
+curl https://saturn.foryoupage.org/api/auth/me \
+  -H "Authorization: Bearer invalid_token"
+
+# Test rate limiting (make multiple rapid requests)
+for i in {1..5}; do
+  curl -X POST https://saturn.foryoupage.org/api/auth/login \
+    -H "Content-Type: application/json" \
+    -d '{"username": "testuser", "password": "SecurePassword123!"}'
+done
+```
+
+**Active Test Data:**
+
+- **2 Posts created** by test accounts with sample content
+- **4 User accounts** ready for interaction testing
+- **Federation endpoints** configured and working
+- **Rate limiting** active and functional
+- **Security headers** properly configured
+
 ### Test Structure
 
 ```
