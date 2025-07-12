@@ -1,23 +1,21 @@
-import type { Request, Response, NextFunction, RequestHandler } from 'express';
-import type {
-  ZodType,
-  ZodTypeDef} from 'zod';
-import {
-  AnyZodObject as _AnyZodObject,
-  ZodFormattedError as _ZodFormattedError,
-  ZodError as _ZodError,
-} from 'zod';
-import { AppError, ErrorType } from '../utils/errors';
+import { Request, Response, NextFunction, RequestHandler } from "express";
+import { ZodType, ZodTypeDef } from "zod";
+import { AppError, ErrorType } from "../utils/errors";
 
-/**
- * Helper function to conditionally log messages only when not in test mode
- */
-const log = (message: string): void => {
-  // Skip logging in test mode
-  if (process.env.NODE_ENV !== 'test') {
-    console.log(message);
+// Logging utility for debugging
+const log = (message: string) => {
+  if (process.env.NODE_ENV === "development") {
+    console.log(`[${new Date().toISOString()}] ${message}`);
   }
 };
+
+// Standardized error response format
+const createValidationErrorResponse = (message: string, details?: any) => ({
+  status: "error",
+  type: ErrorType.VALIDATION,
+  error: message,
+  ...(details && { details }),
+});
 
 /**
  * Creates an Express middleware function to validate the request body against a Zod schema.
@@ -31,9 +29,9 @@ export function validateRequestBody<T>(schema: ZodType<T>): RequestHandler {
 
     // Skip validation for multipart/form-data requests (used for file uploads)
     const isMultipart =
-      req.headers?.['content-type'] &&
-      typeof req.headers['content-type'] === 'string' &&
-      req.headers['content-type'].includes('multipart/form-data');
+      req.headers?.["content-type"] &&
+      typeof req.headers["content-type"] === "string" &&
+      req.headers["content-type"].includes("multipart/form-data");
 
     if (isMultipart) {
       log(`[Validator] Skipping validation for multipart form data`);
@@ -50,10 +48,14 @@ export function validateRequestBody<T>(schema: ZodType<T>): RequestHandler {
         log(
           `[Validator] Validation failed: ${JSON.stringify(parseResult.error)}`
         );
-        return res.status(400).json({
-          error: 'Validation failed',
-          details: parseResult.error.format(),
-        });
+        return res
+          .status(400)
+          .json(
+            createValidationErrorResponse(
+              "Request body validation failed",
+              parseResult.error.format()
+            )
+          );
       }
 
       // If validation succeeds, update req.body with the parsed data
@@ -65,7 +67,7 @@ export function validateRequestBody<T>(schema: ZodType<T>): RequestHandler {
       log(`[Validator] Unexpected error during validation: ${error}`);
       next(
         new AppError(
-          'Internal Server Error during validation',
+          "Internal Server Error during validation",
           500,
           ErrorType.INTERNAL_SERVER_ERROR
         )
@@ -94,12 +96,18 @@ export function validateRequestQuery(
       if (!parseResult.success) {
         // If validation fails, create a 400 Bad Request error
         log(
-          `[Validator] Query validation failed: ${JSON.stringify(parseResult.error)}`
+          `[Validator] Query validation failed: ${JSON.stringify(
+            parseResult.error
+          )}`
         );
-        return res.status(400).json({
-          error: 'Query validation failed',
-          details: parseResult.error.format(),
-        });
+        return res
+          .status(400)
+          .json(
+            createValidationErrorResponse(
+              "Query parameter validation failed",
+              parseResult.error.format()
+            )
+          );
       }
 
       // If validation succeeds, update req.query with the parsed data
@@ -114,7 +122,7 @@ export function validateRequestQuery(
       log(`[Validator] Unexpected error during query validation: ${error}`);
       next(
         new AppError(
-          'Internal Server Error during query validation',
+          "Internal Server Error during query validation",
           500,
           ErrorType.INTERNAL_SERVER_ERROR
         )
@@ -139,21 +147,23 @@ export function validateRequestParams<T>(schema: ZodType<T>): RequestHandler {
 
       if (!parseResult.success) {
         // Extract the custom error message if available
-        let errorMessage = 'URL parameter validation failed';
+        let errorMessage = "URL parameter validation failed";
         const error = parseResult.error;
 
         // Try to find the first custom error message from error issues
-        const firstError = error.issues.find(issue => issue.message);
+        const firstError = error.issues.find((issue) => issue.message);
         if (firstError) {
           errorMessage = firstError.message;
         }
 
         log(
-          `[Validator] URL parameter validation failed: ${JSON.stringify(error)}`
+          `[Validator] URL parameter validation failed: ${JSON.stringify(
+            error
+          )}`
         );
-        return res.status(400).json({
-          error: errorMessage,
-        });
+        return res
+          .status(400)
+          .json(createValidationErrorResponse(errorMessage, error.format()));
       }
 
       // If validation succeeds, update req.params with the parsed data
@@ -169,7 +179,7 @@ export function validateRequestParams<T>(schema: ZodType<T>): RequestHandler {
       );
       next(
         new AppError(
-          'Internal Server Error during URL parameter validation',
+          "Internal Server Error during URL parameter validation",
           500,
           ErrorType.INTERNAL_SERVER_ERROR
         )
