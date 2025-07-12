@@ -479,6 +479,10 @@ Authorization: Bearer <jwt_token>
 
 🚨 **SECURITY NOTICE**: Authentication endpoints currently expose the `email` field in responses. This is a security/privacy concern that will be addressed in a future update.
 
+⚠️ **CRITICAL SECURITY VULNERABILITY**: The actor search endpoint (`/api/actors/search`) exposes password hashes in responses. This is a serious security vulnerability that needs immediate attention.
+
+🔴 **KNOWN ISSUE**: Post like/unlike functionality is currently broken due to ID validation mismatch. The endpoints expect MongoDB ObjectId format but posts use ActivityPub URL format.
+
 ✅ **RECENT FIX**: Fixed login endpoint issue where `findByUsername` was incorrectly searching by `preferredUsername` instead of `username` field. This resolves intermittent login failures reported by frontend teams.
 
 ### Register User
@@ -639,6 +643,8 @@ GET /api/actors/:username
 GET /api/actors/search?q=searchterm
 ```
 
+⚠️ **SECURITY VULNERABILITY**: This endpoint currently exposes password hashes in responses. Do not use in production until fixed.
+
 **Response (200):**
 
 ```json
@@ -773,6 +779,8 @@ POST /api/posts
 POST /api/posts/:id/like
 POST /api/posts/:id/unlike
 ```
+
+🔴 **CURRENTLY BROKEN**: These endpoints are non-functional due to ID validation mismatch. The validation expects MongoDB ObjectId format but posts use ActivityPub URL format.
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -1884,6 +1892,34 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Issues:** [GitHub Issues](https://github.com/marx1108/saturn/issues)
 - **Discussions:** [GitHub Discussions](https://github.com/marx1108/saturn-api/discussions)
 - **Security:** security@saturn-project.com
+
+---
+
+## 📋 **API Validation Status**
+
+**Last Validated**: January 12, 2025
+
+**Validation Coverage**:
+
+- ✅ Authentication endpoints (login, register, /me)
+- ✅ Posts endpoints (feed, create, individual post)
+- ✅ Actor endpoints (profile, search - with security note)
+- ✅ Federation endpoints (WebFinger, ActivityPub)
+- ✅ Error handling (all error types)
+- ✅ Response formats (standardized across all endpoints)
+- ✅ Rate limiting (functional with restrictive limits)
+- ✅ Health endpoint
+- ✅ Test accounts (all 4 accounts working)
+
+**Issues Found**:
+
+- 🔴 **Critical**: Post like/unlike functionality broken (ID validation mismatch)
+- ⚠️ **Critical Security**: Actor search exposes password hashes
+- 🟡 **Known**: Comments system post ID format mismatch (documented)
+- 🟡 **Known**: Email exposure in auth responses (documented)
+- 🟡 **Known**: displayName/iconUrl fields null/undefined (documented)
+
+**Overall API Health**: 🟢 **Functional** - Core functionality working, with documented issues
 
 ---
 
