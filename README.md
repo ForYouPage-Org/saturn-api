@@ -1824,6 +1824,175 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
+## 🚨 **Frontend Integration Troubleshooting Guide**
+
+### **Common Issues & Solutions**
+
+#### **1. "[object Object]" Error Display**
+
+**Problem:** Error messages showing "[object Object]" instead of readable text.
+
+**Root Cause:** Passing entire error response object to toast/alert instead of the error message.
+
+**Solution:**
+
+```javascript
+// ❌ WRONG
+const response = await fetch('/api/auth/login', { ... });
+const data = await response.json();
+showToast(data); // This shows "[object Object]"
+
+// ✅ CORRECT
+const response = await fetch('/api/auth/login', { ... });
+const data = await response.json();
+if (!response.ok) {
+  showToast(data.error); // This shows the actual error message
+}
+```
+
+#### **2. Rate Limit During Development**
+
+**Problem:** Getting rate limited while testing (HTTP 429).
+
+**Current Status:** Production server uses restrictive limits (10 auth attempts per 15 minutes).
+
+**Solutions:**
+
+- **Wait 15 minutes** between auth attempts
+- **Use existing test tokens** from the documentation
+- **Test non-auth endpoints** which have higher limits
+- **After next deployment:** Development will have 1000 attempts per minute
+
+#### **3. Unexpected Field Names**
+
+**Problem:** Frontend expecting `actor` but API returns `author`.
+
+**Key Differences:**
+
+- Posts use `author` (not `actor`)
+- Posts use `published` (not `createdAt`)
+- Posts use `likedByUser` (not `isLiked`)
+- Posts use `replyCount` (not `commentsCount`)
+- Feed uses `hasMore` (not pagination object)
+
+**Solution:** Update frontend to use correct field names (see Field Specifications section).
+
+#### **4. Token Expiration**
+
+**Problem:** Tokens expire after 24 hours.
+
+**Solution:**
+
+```javascript
+// Check token expiration
+const token = localStorage.getItem("token");
+const payload = JSON.parse(atob(token.split(".")[1]));
+const isExpired = payload.exp * 1000 < Date.now();
+
+if (isExpired) {
+  // Redirect to login
+  window.location.href = "/login";
+}
+```
+
+#### **5. CORS Issues**
+
+**Problem:** CORS errors in browser console.
+
+**Solution:** The API includes `Access-Control-Allow-Origin: *` for development. If issues persist, check:
+
+- Request headers are correct
+- Content-Type is `application/json`
+- Authorization header format: `Bearer <token>`
+
+### **Best Practices for Frontend Teams**
+
+#### **Error Handling**
+
+```javascript
+const handleApiCall = async (url, options) => {
+  try {
+    const response = await fetch(url, options);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || `HTTP ${response.status}`);
+    }
+
+    return data;
+  } catch (error) {
+    console.error("API Error:", error);
+    showToast(error.message);
+    throw error;
+  }
+};
+```
+
+#### **Token Management**
+
+```javascript
+const getAuthHeader = () => {
+  const token = localStorage.getItem("token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+const apiCall = (url, options = {}) => {
+  return fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeader(),
+      ...options.headers,
+    },
+  });
+};
+```
+
+#### **Type Safety**
+
+```typescript
+// Use the provided TypeScript interfaces
+interface ApiResponse<T> {
+  data?: T;
+  status?: "success" | "error";
+  error?: string;
+  type?: string;
+}
+
+const login = async (
+  credentials: LoginCredentials
+): Promise<{ actor: Actor; token: string }> => {
+  const response = await fetch("/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(credentials),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "Login failed");
+  }
+
+  return data;
+};
+```
+
+### **Quick Reference for Frontend Teams**
+
+| Field           | API Response                                            | Frontend Display        |
+| --------------- | ------------------------------------------------------- | ----------------------- |
+| User ID         | `actor.id` or `author.id`                               | User profile link       |
+| Username        | `actor.username` or `author.username`                   | @username               |
+| Display Name    | `actor.preferredUsername` or `author.preferredUsername` | Display name            |
+| Post Time       | `published`                                             | Format as "2 hours ago" |
+| Like Status     | `likedByUser`                                           | Heart icon state        |
+| Like Count      | `likes`                                                 | "5 likes"               |
+| Comment Count   | `replyCount`                                            | "3 comments"            |
+| Content Warning | `sensitive` + `summary`                                 | Show/hide content       |
+
+---
+
 **Made with ❤️ by FYP Saturn Team**
 
 _Building the future of decentralized social media, FYP Saturn: Own Your Orbit_
