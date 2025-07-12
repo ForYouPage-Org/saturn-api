@@ -4,7 +4,7 @@ REPOSITORY: saturn-api
 
 for every implementation or code modification unless told otherwise you will run complete test and code quality check documented in readme to ensure rigour 
 
-for every implementation ensure you validate readme source of truth against the code and live server and document all changes
+for every implementation ensure you validate readme source of truth against the code and local server and live server (if deployed) and document all changes
 
 
 1. Overall Objective of this Interaction Model:

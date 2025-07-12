@@ -4,6 +4,14 @@ import { ActorsController } from "../controllers/actorsController";
 import { authenticate } from "../../../middleware/auth";
 import type { ServiceContainer } from "../../../utils/container";
 import { wrapAsync } from "../../../utils/routeHandler";
+import {
+  validateRequestParams,
+  validateRequestQuery,
+} from "../../../middleware/validateRequest";
+import {
+  usernameParamSchema,
+  followListQuerySchema,
+} from "../schemas/follow.schemas";
 
 /**
  * Configure actor routes with the controller
@@ -85,6 +93,38 @@ export default function configureActorRoutes(
     "/:id",
     authenticate(authService),
     wrapAsync(actorsController.deleteActor.bind(actorsController))
+  );
+
+  // Follow user
+  router.post(
+    "/:username/follow",
+    authenticate(authService),
+    validateRequestParams(usernameParamSchema),
+    wrapAsync(actorsController.followUser.bind(actorsController))
+  );
+
+  // Unfollow user
+  router.delete(
+    "/:username/follow",
+    authenticate(authService),
+    validateRequestParams(usernameParamSchema),
+    wrapAsync(actorsController.unfollowUser.bind(actorsController))
+  );
+
+  // Get followers list
+  router.get(
+    "/:username/followers",
+    validateRequestParams(usernameParamSchema),
+    validateRequestQuery(followListQuerySchema),
+    wrapAsync(actorsController.getFollowersList.bind(actorsController))
+  );
+
+  // Get following list
+  router.get(
+    "/:username/following",
+    validateRequestParams(usernameParamSchema),
+    validateRequestQuery(followListQuerySchema),
+    wrapAsync(actorsController.getFollowingList.bind(actorsController))
   );
 
   return router;

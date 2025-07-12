@@ -658,6 +658,125 @@ GET /api/actors/search?q=searchterm
 }
 ```
 
+### Follow User
+
+⚠️ **Note**: The follow/unfollow functionality is currently in development. The HTTP endpoints are implemented and properly validate requests, but the actual follow relationships may not persist correctly due to data structure compatibility issues. The followers/following list endpoints work correctly.
+
+```http
+POST /api/actors/:username/follow
+```
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+
+```json
+{
+  "status": "success",
+  "message": "Successfully followed johndoe",
+  "isFollowing": true
+}
+```
+
+**Error Responses:**
+
+- **400 Bad Request:** Cannot follow yourself
+- **401 Unauthorized:** Authentication required
+- **404 Not Found:** User not found
+- **500 Internal Server Error:** Failed to follow user
+
+### Unfollow User
+
+```http
+DELETE /api/actors/:username/follow
+```
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+
+```json
+{
+  "status": "success",
+  "message": "Successfully unfollowed johndoe",
+  "isFollowing": false
+}
+```
+
+**Error Responses:**
+
+- **401 Unauthorized:** Authentication required
+- **404 Not Found:** User not found
+- **500 Internal Server Error:** Failed to unfollow user
+
+### Get Followers List
+
+```http
+GET /api/actors/:username/followers?page=1&limit=20
+```
+
+**Query Parameters:**
+
+- `page`: number (optional, default: 1)
+- `limit`: number (optional, default: 20, max: 50)
+
+**Response (200):**
+
+```json
+{
+  "status": "success",
+  "followers": [
+    {
+      "id": "actor123",
+      "username": "johndoe",
+      "preferredUsername": "John Doe",
+      "displayName": "John Doe",
+      "iconUrl": "https://example.com/avatar.jpg",
+      "createdAt": "2023-01-01T00:00:00.000Z",
+      "updatedAt": "2023-01-01T00:00:00.000Z"
+    }
+  ],
+  "total": 5,
+  "page": 1,
+  "limit": 20,
+  "hasMore": false
+}
+```
+
+### Get Following List
+
+```http
+GET /api/actors/:username/following?page=1&limit=20
+```
+
+**Query Parameters:**
+
+- `page`: number (optional, default: 1)
+- `limit`: number (optional, default: 20, max: 50)
+
+**Response (200):**
+
+```json
+{
+  "status": "success",
+  "following": [
+    {
+      "id": "actor123",
+      "username": "johndoe",
+      "preferredUsername": "John Doe",
+      "displayName": "John Doe",
+      "iconUrl": "https://example.com/avatar.jpg",
+      "createdAt": "2023-01-01T00:00:00.000Z",
+      "updatedAt": "2023-01-01T00:00:00.000Z"
+    }
+  ],
+  "total": 3,
+  "page": 1,
+  "limit": 20,
+  "hasMore": false
+}
+```
+
 ### Update Actor
 
 ```http
@@ -1025,6 +1144,23 @@ curl https://saturn.foryoupage.org/api/actors/testuser \
 
 # Search actors
 curl "https://saturn.foryoupage.org/api/actors/search?q=content" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+
+# Follow a user
+curl -X POST https://saturn.foryoupage.org/api/actors/adminuser/follow \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+
+# Unfollow a user
+curl -X DELETE https://saturn.foryoupage.org/api/actors/adminuser/follow \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+
+# Get followers list
+curl "https://saturn.foryoupage.org/api/actors/testuser/followers?page=1&limit=10" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+
+# Get following list
+curl "https://saturn.foryoupage.org/api/actors/testuser/following?page=1&limit=10" \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 

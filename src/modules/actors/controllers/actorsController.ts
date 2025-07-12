@@ -333,4 +333,245 @@ export class ActorsController {
       next(error);
     }
   }
+
+  /**
+   * Follow a user
+   */
+  async followUser(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { username } = req.params;
+      const currentUser = req.user;
+
+      console.log(
+        `[ActorsController] Follow request: ${currentUser?.preferredUsername} -> ${username}`
+      );
+
+      if (!currentUser) {
+        throw new AppError(
+          "Authentication required",
+          401,
+          ErrorType.UNAUTHORIZED
+        );
+      }
+
+      // Prevent users from following themselves
+      if (currentUser.preferredUsername === username) {
+        throw new AppError("Cannot follow yourself", 400, ErrorType.VALIDATION);
+      }
+
+      // Get the target user to follow
+      const targetActor = await this.actorService.getActorByUsername(username);
+      if (!targetActor) {
+        throw new AppError("User not found", 404, ErrorType.NOT_FOUND);
+      }
+
+      console.log(
+        `[ActorsController] Found target actor: ${targetActor.preferredUsername} (id: ${targetActor.id})`
+      );
+      console.log(
+        `[ActorsController] Current user: ${currentUser.preferredUsername} (id: ${currentUser.id})`
+      );
+
+      // Follow the user - pass the actor ID
+      try {
+        const success = await this.actorService.follow(
+          currentUser.id,
+          targetActor.id // Use the id field which should work with getActorByApId
+        );
+
+        if (!success) {
+          throw new AppError(
+            "Failed to follow user",
+            500,
+            ErrorType.INTERNAL_SERVER_ERROR
+          );
+        }
+
+        console.log(
+          `[ActorsController] Successfully followed user: ${username}`
+        );
+
+        res.status(200).json({
+          status: "success",
+          message: `Successfully followed ${username}`,
+          isFollowing: true,
+        });
+      } catch (followError) {
+        console.error(
+          `[ActorsController] Error during follow operation:`,
+          followError
+        );
+        // Re-throw the error to let the outer catch handle it
+        throw followError;
+      }
+    } catch (error) {
+      console.error(`[ActorsController] Error in followUser:`, error);
+      next(error);
+    }
+  }
+
+  /**
+   * Unfollow a user
+   */
+  async unfollowUser(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { username } = req.params;
+      const currentUser = req.user;
+
+      if (!currentUser) {
+        throw new AppError(
+          "Authentication required",
+          401,
+          ErrorType.UNAUTHORIZED
+        );
+      }
+
+      // Get the target user to unfollow
+      const targetActor = await this.actorService.getActorByUsername(username);
+      if (!targetActor) {
+        throw new AppError("User not found", 404, ErrorType.NOT_FOUND);
+      }
+
+      // Unfollow the user - pass the MongoDB ID as the ActivityPub ID for now
+      // TODO: When proper ActivityPub URLs are implemented, use those instead
+      const success = await this.actorService.unfollow(
+        currentUser.id,
+        targetActor._id.toString() // Use _id as the ActivityPub ID for now
+      );
+
+      if (!success) {
+        throw new AppError(
+          "Failed to unfollow user",
+          500,
+          ErrorType.INTERNAL_SERVER_ERROR
+        );
+      }
+
+      res.status(200).json({
+        status: "success",
+        message: `Successfully unfollowed ${username}`,
+        isFollowing: false,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Get followers list
+   */
+  async getFollowersList(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { username } = req.params;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = Math.min(parseInt(req.query.limit as string) || 20, 50);
+
+      // Get the target actor
+      const targetActor = await this.actorService.getActorByUsername(username);
+      if (!targetActor) {
+        throw new AppError("User not found", 404, ErrorType.NOT_FOUND);
+      }
+
+      // Get followers list - service returns Actor[] directly
+      const followers = await this.actorService.getFollowers(
+        targetActor.id,
+        page,
+        limit
+      );
+
+      // Filter out sensitive information
+      const safeFollowers = followers.map((follower) => {
+        const {
+          password: _password,
+          email: _email,
+          privateKey: _privateKey,
+          ...actorWithoutSensitiveInfo
+        } = follower;
+        return actorWithoutSensitiveInfo;
+      });
+
+      // Calculate total and hasMore (Note: This is a simplified approach)
+      // TODO: Implement proper pagination with total count from repository
+      const total = safeFollowers.length;
+      const hasMore = safeFollowers.length === limit;
+
+      res.status(200).json({
+        status: "success",
+        followers: safeFollowers,
+        total,
+        page,
+        limit,
+        hasMore,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Get following list
+   */
+  async getFollowingList(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { username } = req.params;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = Math.min(parseInt(req.query.limit as string) || 20, 50);
+
+      // Get the target actor
+      const targetActor = await this.actorService.getActorByUsername(username);
+      if (!targetActor) {
+        throw new AppError("User not found", 404, ErrorType.NOT_FOUND);
+      }
+
+      // Get following list - service returns Actor[] directly
+      const following = await this.actorService.getFollowing(
+        targetActor._id.toString(),
+        page,
+        limit
+      );
+
+      // Filter out sensitive information
+      const safeFollowing = following.map((followingActor) => {
+        const {
+          password: _password,
+          email: _email,
+          privateKey: _privateKey,
+          ...actorWithoutSensitiveInfo
+        } = followingActor;
+        return actorWithoutSensitiveInfo;
+      });
+
+      // Calculate total and hasMore (Note: This is a simplified approach)
+      // TODO: Implement proper pagination with total count from repository
+      const total = safeFollowing.length;
+      const hasMore = safeFollowing.length === limit;
+
+      res.status(200).json({
+        status: "success",
+        following: safeFollowing,
+        total,
+        page,
+        limit,
+        hasMore,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

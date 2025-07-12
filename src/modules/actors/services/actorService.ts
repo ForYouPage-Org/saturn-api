@@ -1,8 +1,8 @@
-import type { Actor } from '../models/actor';
-import type { ActorRepository } from '../repositories/actorRepository';
-import type { NotificationService } from '@/modules/notifications/services/notification.service';
-import { AppError, ErrorType } from '@/utils/errors';
-import { ObjectId } from 'mongodb';
+import type { Actor } from "../models/actor";
+import type { ActorRepository } from "../repositories/actorRepository";
+import type { NotificationService } from "@/modules/notifications/services/notification.service";
+import { AppError, ErrorType } from "@/utils/errors";
+import { ObjectId } from "mongodb";
 
 // Define CreateActorData interface and export it
 export interface CreateActorData {
@@ -37,7 +37,7 @@ export class ActorService {
       email,
       password,
       displayName = username, // Use username as default display name
-      summary = '', // Empty string as default summary
+      summary = "", // Empty string as default summary
       isAdmin = false,
       isVerified = false,
     } = data;
@@ -45,7 +45,7 @@ export class ActorService {
     // Validate password is required
     if (!password) {
       throw new AppError(
-        'Password is required for local actor creation',
+        "Password is required for local actor creation",
         400,
         ErrorType.BAD_REQUEST
       );
@@ -61,7 +61,7 @@ export class ActorService {
     });
 
     if (existingActor) {
-      throw new AppError('Username already taken', 409, ErrorType.CONFLICT);
+      throw new AppError("Username already taken", 409, ErrorType.CONFLICT);
     }
 
     // Check if email already exists
@@ -70,16 +70,16 @@ export class ActorService {
     });
 
     if (existingEmail) {
-      throw new AppError('Email already registered', 409, ErrorType.CONFLICT);
+      throw new AppError("Email already registered", 409, ErrorType.CONFLICT);
     }
 
     // Generate MongoDB ObjectId (ensure _id and id are consistent)
     const actorObjectId = new ObjectId();
 
     // Create a new actor
-    const actor: Omit<Actor, '_id'> = {
+    const actor: Omit<Actor, "_id"> = {
       id: `https://${domain}/actors/${preferredUsername}`, // ActivityPub ID (URL)
-      type: 'Person', // ActivityPub type
+      type: "Person", // ActivityPub type
       username: `${preferredUsername}@${domain}`, // Full username (user@domain)
       preferredUsername, // Local username
       name: displayName, // Also set name for ActivityPub compatibility
@@ -113,15 +113,15 @@ export class ActorService {
   // --- Get Actor By ID (Internal ObjectId) ---
   async getActorById(id: string | ObjectId): Promise<Actor | null> {
     console.log(
-      '[ActorService] getActorById called with:',
+      "[ActorService] getActorById called with:",
       id,
-      'type:',
+      "type:",
       typeof id
     );
 
     // If id is null or undefined, return null immediately
     if (!id) {
-      console.log('[ActorService] getActorById called with null/undefined id');
+      console.log("[ActorService] getActorById called with null/undefined id");
       return null;
     }
 
@@ -130,24 +130,24 @@ export class ActorService {
       let objectId: ObjectId | string = id;
 
       // If string, try to convert to ObjectId
-      if (typeof id === 'string') {
+      if (typeof id === "string") {
         try {
           // Check if it's a valid ObjectId string
           if (ObjectId.isValid(id)) {
             objectId = new ObjectId(id);
             console.log(
-              '[ActorService] Converted string to ObjectId:',
+              "[ActorService] Converted string to ObjectId:",
               objectId
             );
           } else {
             // Keep as string if not a valid ObjectId (might be an API ID or username)
             console.log(
-              '[ActorService] Using string ID as-is (not a valid ObjectId)'
+              "[ActorService] Using string ID as-is (not a valid ObjectId)"
             );
           }
         } catch (e) {
           console.log(
-            '[ActorService] Error converting to ObjectId, using string as-is:',
+            "[ActorService] Error converting to ObjectId, using string as-is:",
             e
           );
           // Keep as string if conversion fails
@@ -159,25 +159,25 @@ export class ActorService {
 
       // If not found and objectId is an ObjectId instance, try with string representation
       if (!result && objectId instanceof ObjectId) {
-        console.log('[ActorService] Trying string representation of ObjectId');
+        console.log("[ActorService] Trying string representation of ObjectId");
         result = await this.actorRepository.findOne({
           _id: objectId,
         });
       }
 
       // If still not found and id is a string that looks like a URL, try by AP ID
-      if (!result && typeof id === 'string' && id.startsWith('http')) {
-        console.log('[ActorService] Trying lookup by AP ID');
+      if (!result && typeof id === "string" && id.startsWith("http")) {
+        console.log("[ActorService] Trying lookup by AP ID");
         result = await this.actorRepository.findOne({ id });
       }
 
       console.log(
-        '[ActorService] findById result:',
-        result ? 'Found' : 'Not found'
+        "[ActorService] findById result:",
+        result ? "Found" : "Not found"
       );
       return result || null;
     } catch (error) {
-      console.error('[ActorService] Error in getActorById:', error);
+      console.error("[ActorService] Error in getActorById:", error);
       return null;
     }
   }
@@ -208,7 +208,7 @@ export class ActorService {
   // --- Update Actor Profile ---
   async updateActorProfile(
     actorId: string | ObjectId,
-    updates: Partial<Pick<Actor, 'displayName' | 'summary' | 'icon'>>
+    updates: Partial<Pick<Actor, "displayName" | "summary" | "icon">>
   ): Promise<Actor | null> {
     try {
       console.log(`[ActorService] Updating actor profile with ID: ${actorId}`);
@@ -217,14 +217,14 @@ export class ActorService {
       // Validate actorId
       if (!actorId) {
         console.error(
-          '[ActorService] updateActorProfile called with null/undefined actorId'
+          "[ActorService] updateActorProfile called with null/undefined actorId"
         );
         return null;
       }
 
       // Validate update payload
       if (!updates || Object.keys(updates).length === 0) {
-        console.error('[ActorService] Empty update payload provided');
+        console.error("[ActorService] Empty update payload provided");
         return null;
       }
 
@@ -271,26 +271,40 @@ export class ActorService {
   // --- Follow Actor ---
   async follow(
     followerId: string | ObjectId,
-    followeeApId: string
+    followeeId: string
   ): Promise<boolean> {
+    console.log(
+      `[ActorService] Follow request: followerId=${followerId}, followeeId=${followeeId}`
+    );
+
     const follower = await this.getActorById(followerId);
     if (!follower) {
-      throw new AppError('Follower not found', 404, ErrorType.NOT_FOUND);
+      console.error(`[ActorService] Follower not found with ID: ${followerId}`);
+      throw new AppError("Follower not found", 404, ErrorType.NOT_FOUND);
     }
 
-    // TODO: Fetch followee actor (local or remote)
-    // const followee = await this.getActorByApId(followeeApId) || await this.fetchRemoteActor(followeeApId);
-    const followee = await this.getActorByApId(followeeApId);
+    console.log(`[ActorService] Found follower: ${follower.preferredUsername}`);
+
+    // For now, we'll use getActorById instead of getActorByApId since our data structure
+    // doesn't have proper ActivityPub URLs yet
+    const followee = await this.getActorById(followeeId);
     if (!followee) {
-      throw new AppError('Followee not found', 404, ErrorType.NOT_FOUND);
+      console.error(`[ActorService] Followee not found with ID: ${followeeId}`);
+      throw new AppError("Followee not found", 404, ErrorType.NOT_FOUND);
     }
 
-    // Add followee AP ID to follower's following list
-    // Use addFollowing from repository
+    console.log(`[ActorService] Found followee: ${followee.preferredUsername}`);
+
+    // Add followee ID to follower's following list
+    console.log(
+      `[ActorService] Adding ${followee.id} to ${follower.preferredUsername}'s following list`
+    );
     const result = await this.actorRepository.addFollowing(
       follower._id,
       followee.id
     );
+
+    console.log(`[ActorService] Follow operation result: ${result}`);
 
     // TODO: Send Follow activity to followee's inbox
     // TODO: Handle accept/reject flow if followee manually approves
@@ -302,18 +316,39 @@ export class ActorService {
   // --- Unfollow Actor ---
   async unfollow(
     followerId: string | ObjectId,
-    followeeApId: string
+    followeeId: string
   ): Promise<boolean> {
-    const follower = await this.getActorById(followerId);
-    if (!follower)
-      throw new AppError('Follower not found', 404, ErrorType.NOT_FOUND);
+    console.log(
+      `[ActorService] Unfollow request: followerId=${followerId}, followeeId=${followeeId}`
+    );
 
-    // Remove followee AP ID from follower's following list
-    // Use removeFollowing from repository
+    const follower = await this.getActorById(followerId);
+    if (!follower) {
+      console.error(`[ActorService] Follower not found with ID: ${followerId}`);
+      throw new AppError("Follower not found", 404, ErrorType.NOT_FOUND);
+    }
+
+    console.log(`[ActorService] Found follower: ${follower.preferredUsername}`);
+
+    // For now, we'll use getActorById instead of getActorByApId
+    const followee = await this.getActorById(followeeId);
+    if (!followee) {
+      console.error(`[ActorService] Followee not found with ID: ${followeeId}`);
+      throw new AppError("Followee not found", 404, ErrorType.NOT_FOUND);
+    }
+
+    console.log(`[ActorService] Found followee: ${followee.preferredUsername}`);
+
+    // Remove followee ID from follower's following list
+    console.log(
+      `[ActorService] Removing ${followee.id} from ${follower.preferredUsername}'s following list`
+    );
     const result = await this.actorRepository.removeFollowing(
       follower._id,
-      followeeApId
+      followee.id
     );
+
+    console.log(`[ActorService] Unfollow operation result: ${result}`);
 
     // TODO: Send Undo(Follow) activity to followee's inbox
     // TODO: Update follower count on followee (if local)
