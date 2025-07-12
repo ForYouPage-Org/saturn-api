@@ -198,9 +198,20 @@ Most endpoints require authentication via JWT tokens:
 Authorization: Bearer <your_jwt_token>
 ```
 
-### 🔧 **STANDARDIZED ERROR RESPONSE FORMAT**
+### 🔧 **STANDARDIZED RESPONSE FORMAT**
 
-**All API errors now use a consistent format to prevent frontend integration issues:**
+**All API responses use a consistent format with status field:**
+
+**Success Response:**
+
+```json
+{
+  "status": "success"
+  // ... response data
+}
+```
+
+**Error Response:**
 
 ```json
 {
@@ -213,15 +224,16 @@ Authorization: Bearer <your_jwt_token>
 
 ### 📋 **Error Types & Status Codes**
 
-| Error Type     | HTTP Status | Description                    | Example Use Case                              |
-| -------------- | ----------- | ------------------------------ | --------------------------------------------- |
-| `VALIDATION`   | 400         | Request data validation failed | Invalid email format, missing required fields |
-| `UNAUTHORIZED` | 401         | Authentication required        | Missing or invalid JWT token                  |
-| `FORBIDDEN`    | 403         | Permission denied              | User lacks required permissions               |
-| `NOT_FOUND`    | 404         | Requested resource not found   | User/post doesn't exist                       |
-| `CONFLICT`     | 409         | Resource conflict              | Username already exists                       |
-| `RATE_LIMIT`   | 429         | Too many requests              | Rate limit exceeded                           |
-| `SERVER_ERROR` | 500         | Internal server error          | Database connection failed                    |
+| Error Type       | HTTP Status | Description                    | Example Use Case                              |
+| ---------------- | ----------- | ------------------------------ | --------------------------------------------- |
+| `VALIDATION`     | 400         | Request data validation failed | Invalid email format, missing required fields |
+| `AUTHENTICATION` | 401         | Authentication failed          | Invalid credentials, expired token            |
+| `UNAUTHORIZED`   | 401         | Authentication required        | Missing JWT token                             |
+| `FORBIDDEN`      | 403         | Permission denied              | User lacks required permissions               |
+| `NOT_FOUND`      | 404         | Requested resource not found   | User/post doesn't exist                       |
+| `CONFLICT`       | 409         | Resource conflict              | Username already exists                       |
+| `RATE_LIMIT`     | 429         | Too many requests              | Rate limit exceeded                           |
+| `SERVER_ERROR`   | 500         | Internal server error          | Database connection failed                    |
 
 ### 🔍 **Error Response Examples**
 
@@ -230,7 +242,7 @@ Authorization: Bearer <your_jwt_token>
 ```json
 {
   "status": "error",
-  "type": "UNAUTHORIZED",
+  "type": "AUTHENTICATION",
   "error": "Invalid credentials"
 }
 ```
@@ -351,9 +363,9 @@ interface Actor {
   id: string; // Same as _id
   username: string; // 3-30 chars, alphanumeric + underscore
   preferredUsername: string; // Display name
-  displayName?: string; // Display name for UI (optional)
-  iconUrl?: string; // Profile icon URL (optional)
-  email?: string; // Valid email format (private field - only in registration, removed in responses)
+  displayName?: string; // Display name for UI (optional, currently null/undefined in database)
+  iconUrl?: string; // Profile icon URL (optional, currently null/undefined in database)
+  email: string; // Valid email format (⚠️ SECURITY: Currently exposed in responses)
   followers: string[]; // Array of user IDs
   following: string[]; // Array of user IDs
   createdAt: string; // ISO 8601 timestamp
@@ -465,6 +477,8 @@ Authorization: Bearer <jwt_token>
 
 ## 🔐 Authentication Endpoints
 
+🚨 **SECURITY NOTICE**: Authentication endpoints currently expose the `email` field in responses. This is a security/privacy concern that will be addressed in a future update.
+
 ### Register User
 
 ```http
@@ -485,6 +499,7 @@ POST /api/auth/register
 
 ```json
 {
+  "status": "success",
   "actor": {
     "_id": "6872b97082b9e189bf982804",
     "id": "6872b97082b9e189bf982804",
@@ -492,9 +507,9 @@ POST /api/auth/register
     "preferredUsername": "johndoe",
     "followers": [],
     "following": [],
+    "email": "john@example.com",
     "createdAt": "2025-07-12T19:37:20.231Z",
     "updatedAt": "2025-07-12T19:37:20.231Z"
-    // Note: email field is removed for security
   },
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." // JWT token, expires in 24h
 }
@@ -540,6 +555,7 @@ POST /api/auth/login
 
 ```json
 {
+  "status": "success",
   "actor": {
     "_id": "6872b97082b9e189bf982804",
     "id": "6872b97082b9e189bf982804",
@@ -547,9 +563,9 @@ POST /api/auth/login
     "preferredUsername": "johndoe",
     "followers": [],
     "following": [],
+    "email": "john@example.com",
     "createdAt": "2025-07-12T19:37:20.231Z",
     "updatedAt": "2025-07-12T19:37:20.231Z"
-    // Note: email field is removed for security
   },
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." // JWT token, expires in 24h
 }
@@ -577,15 +593,16 @@ GET /api/auth/me
 
 ```json
 {
+  "status": "success",
   "_id": "6872b97082b9e189bf982804",
   "id": "6872b97082b9e189bf982804",
   "username": "johndoe",
   "preferredUsername": "johndoe",
   "followers": [],
   "following": [],
+  "email": "john@example.com",
   "createdAt": "2025-07-12T19:37:20.231Z",
   "updatedAt": "2025-07-12T19:37:20.231Z"
-  // Note: email field is removed for security
 }
 ```
 
@@ -667,6 +684,7 @@ GET /api/posts?page=1&limit=10
 
 ```json
 {
+  "status": "success",
   "posts": [
     {
       "id": "https://saturn.foryoupage.org/posts/d6d5ecc2-a589-43c8-aba6-ef2bfbb14f7c",
@@ -675,19 +693,18 @@ GET /api/posts?page=1&limit=10
         // Note: "author" not "actor"
         "id": "6872b97082b9e189bf982804",
         "username": "johndoe",
-        "preferredUsername": "John Doe",
-        "displayName": "John Doe", // Display name for UI
-        "iconUrl": "https://example.com/icon.png" // Profile icon URL
+        "preferredUsername": "johndoe"
+        // Note: displayName and iconUrl are null/undefined in current database
       },
       "published": "2025-07-12T19:38:03.548Z", // Note: "published" not "createdAt"
       "sensitive": false,
       "summary": null,
       "attachments": [],
-      "likes": 5,
-      "likedByUser": true, // Note: "likedByUser" not "isLiked"
+      "likes": 0,
+      "likedByUser": false, // Note: "likedByUser" not "isLiked"
       "shares": 0,
       "sharedByUser": false,
-      "replyCount": 2, // Note: "replyCount" not "commentsCount"
+      "replyCount": 0, // Note: "replyCount" not "commentsCount"
       "visibility": "public",
       "url": "https://saturn.foryoupage.org/posts/d6d5ecc2-a589-43c8-aba6-ef2bfbb14f7c"
     }
@@ -725,14 +742,14 @@ POST /api/posts
 
 ```json
 {
+  "status": "success",
   "id": "https://saturn.foryoupage.org/posts/d6d5ecc2-a589-43c8-aba6-ef2bfbb14f7c",
   "content": "New post content",
   "author": {
     "id": "6872b97082b9e189bf982804",
     "username": "johndoe",
-    "preferredUsername": "johndoe",
-    "displayName": "johndoe", // Display name for UI
-    "iconUrl": null // Profile icon URL (null if not set)
+    "preferredUsername": "johndoe"
+    // Note: displayName and iconUrl are null/undefined in current database
   },
   "published": "2025-07-12T19:38:03.548Z",
   "sensitive": false,
@@ -770,6 +787,8 @@ POST /api/posts/:id/unlike
 
 ## 💬 Comment Endpoints
 
+⚠️ **KNOWN ISSUE**: Comments system currently has a post ID format mismatch. Posts use ActivityPub URLs (`https://domain.com/posts/uuid`) but comments expect UUIDs. This will be resolved in a future update.
+
 ### Get Comments
 
 ```http
@@ -780,6 +799,7 @@ GET /api/comments/:postId?page=1&limit=10
 
 ```json
 {
+  "status": "success",
   "comments": [
     {
       "id": "comment123",
@@ -788,18 +808,14 @@ GET /api/comments/:postId?page=1&limit=10
       "author": {
         "id": "comment123",
         "username": "johndoe",
-        "preferredUsername": "John Doe",
-        "displayName": "John Doe", // Display name for UI
-        "iconUrl": "https://example.com/icon.png" // Profile icon URL
+        "preferredUsername": "johndoe"
+        // Note: displayName and iconUrl are null/undefined in current database
       }
     }
   ],
-  "pagination": {
-    "page": 1,
-    "limit": 10,
-    "totalPages": 1,
-    "totalItems": 2
-  }
+  "total": 2,
+  "limit": 10,
+  "offset": 0
 }
 ```
 
