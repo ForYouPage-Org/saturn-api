@@ -290,6 +290,25 @@ try {
 showToast(data); // This causes "[object Object]" display
 ```
 
+**Display Name Handling:**
+
+```javascript
+// ✅ CORRECT - Handle display name with fallback
+const getDisplayName = (author) => {
+  return author.displayName || author.preferredUsername || author.username;
+};
+
+// Usage in components
+<div className="author-name">
+  {getDisplayName(post.author)}
+</div>
+
+// ❌ INCORRECT - Don't use preferredUsername directly without fallback
+<div className="author-name">
+  {post.author.preferredUsername} // May be undefined
+</div>
+```
+
 ### 🚀 **Rate Limiting - Environment Specific**
 
 **Development/Testing (Very Permissive):**
@@ -299,7 +318,16 @@ showToast(data); // This causes "[object Object]" display
 - Posts: 1,000 posts per minute
 - Media uploads: 500 uploads per minute
 
-**Production (Secure):**
+**Production (Current Configuration - Development-Friendly):**
+
+⚠️ **Current Status**: Production server is configured with permissive limits for development testing
+
+- General API: 10,000 requests per minute
+- Authentication: 1,000 attempts per minute
+- Posts: 1,000 posts per minute
+- Media uploads: 500 uploads per minute
+
+**Production (Planned Secure Configuration):**
 
 - General API: 100 requests per 15 minutes
 - Authentication: 10 attempts per 15 minutes
@@ -323,7 +351,9 @@ interface Actor {
   id: string; // Same as _id
   username: string; // 3-30 chars, alphanumeric + underscore
   preferredUsername: string; // Display name
-  email?: string; // Valid email format (private field)
+  displayName?: string; // Display name for UI (optional)
+  iconUrl?: string; // Profile icon URL (optional)
+  email?: string; // Valid email format (private field - only in registration, removed in responses)
   followers: string[]; // Array of user IDs
   following: string[]; // Array of user IDs
   createdAt: string; // ISO 8601 timestamp
@@ -342,6 +372,8 @@ interface Post {
     id: string;
     username: string;
     preferredUsername: string;
+    displayName?: string; // Display name for UI
+    iconUrl?: string; // Profile icon URL
   };
   published: string; // ISO 8601 timestamp (not "createdAt")
   sensitive: boolean; // Content warning flag
@@ -383,9 +415,11 @@ interface Comment {
     id: string;
     username: string;
     preferredUsername: string;
+    displayName: string; // Display name for UI
+    iconUrl?: string; // Profile icon URL
   };
   postId: string; // Parent post ID
-  published: string; // ISO 8601 timestamp
+  createdAt: string; // ISO 8601 timestamp (note: comments use createdAt, not published)
   inReplyTo?: string; // Parent comment ID (for nested comments)
 }
 ```
@@ -458,9 +492,9 @@ POST /api/auth/register
     "preferredUsername": "johndoe",
     "followers": [],
     "following": [],
-    "email": "john@example.com",
     "createdAt": "2025-07-12T19:37:20.231Z",
     "updatedAt": "2025-07-12T19:37:20.231Z"
+    // Note: email field is removed for security
   },
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." // JWT token, expires in 24h
 }
@@ -513,9 +547,9 @@ POST /api/auth/login
     "preferredUsername": "johndoe",
     "followers": [],
     "following": [],
-    "email": "john@example.com",
     "createdAt": "2025-07-12T19:37:20.231Z",
     "updatedAt": "2025-07-12T19:37:20.231Z"
+    // Note: email field is removed for security
   },
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." // JWT token, expires in 24h
 }
@@ -543,10 +577,15 @@ GET /api/auth/me
 
 ```json
 {
-  "id": "user123",
+  "_id": "6872b97082b9e189bf982804",
+  "id": "6872b97082b9e189bf982804",
   "username": "johndoe",
-  "email": "john@example.com",
-  "createdAt": "2023-01-01T00:00:00.000Z"
+  "preferredUsername": "johndoe",
+  "followers": [],
+  "following": [],
+  "createdAt": "2025-07-12T19:37:20.231Z",
+  "updatedAt": "2025-07-12T19:37:20.231Z"
+  // Note: email field is removed for security
 }
 ```
 
@@ -636,7 +675,9 @@ GET /api/posts?page=1&limit=10
         // Note: "author" not "actor"
         "id": "6872b97082b9e189bf982804",
         "username": "johndoe",
-        "preferredUsername": "John Doe"
+        "preferredUsername": "John Doe",
+        "displayName": "John Doe", // Display name for UI
+        "iconUrl": "https://example.com/icon.png" // Profile icon URL
       },
       "published": "2025-07-12T19:38:03.548Z", // Note: "published" not "createdAt"
       "sensitive": false,
@@ -689,7 +730,9 @@ POST /api/posts
   "author": {
     "id": "6872b97082b9e189bf982804",
     "username": "johndoe",
-    "preferredUsername": "johndoe"
+    "preferredUsername": "johndoe",
+    "displayName": "johndoe", // Display name for UI
+    "iconUrl": null // Profile icon URL (null if not set)
   },
   "published": "2025-07-12T19:38:03.548Z",
   "sensitive": false,
@@ -742,10 +785,12 @@ GET /api/comments/:postId?page=1&limit=10
       "id": "comment123",
       "content": "Comment content",
       "createdAt": "2023-01-01T00:00:00.000Z",
-      "actor": {
-        "id": "actor123",
+      "author": {
+        "id": "comment123",
         "username": "johndoe",
-        "preferredUsername": "John Doe"
+        "preferredUsername": "John Doe",
+        "displayName": "John Doe", // Display name for UI
+        "iconUrl": "https://example.com/icon.png" // Profile icon URL
       }
     }
   ],
@@ -1984,8 +2029,11 @@ const login = async (
 | --------------- | ------------------------------------------------------- | ----------------------- |
 | User ID         | `actor.id` or `author.id`                               | User profile link       |
 | Username        | `actor.username` or `author.username`                   | @username               |
-| Display Name    | `actor.preferredUsername` or `author.preferredUsername` | Display name            |
+| Display Name    | `actor.displayName` or `author.displayName`             | Display name            |
+| Preferred Name  | `actor.preferredUsername` or `author.preferredUsername` | Fallback display name   |
+| Profile Icon    | `actor.iconUrl` or `author.iconUrl`                     | Profile avatar          |
 | Post Time       | `published`                                             | Format as "2 hours ago" |
+| Comment Time    | `createdAt`                                             | Format as "2 hours ago" |
 | Like Status     | `likedByUser`                                           | Heart icon state        |
 | Like Count      | `likes`                                                 | "5 likes"               |
 | Comment Count   | `replyCount`                                            | "3 comments"            |
